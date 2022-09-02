@@ -1,0 +1,154 @@
+This is a readme file for the WIN95/NT DLL version of BPMPD version 2.21
+The DLL solves linear and convex quadratic problems.
+
+Note: this is a demo version of the DLL which solves problems without
+size limitations but the output arrays contains the right values only
+if the size of the problem does not exceed a certain size limit (about
+300 variables). A message box warns you at the end of the execution if
+this happens.
+
+
+
+
+The interface is very similar to the previous versions of the DLL but some
+new input/output parameters are added.
+
+
+The objective function is assumed to be in the form:
+
+                1
+   min    c'x + - x'Qx
+                2
+
+
+The Win95/NT DLL can be called by the _STDCALL calling conventions.
+It was tested with Visual Basic and Borland Delphi.
+
+
+The interface for BPMPD:
+
+    subroutine bpmpd(m,n,nz,qn,qnz,
+               acolcnt,acolidx,acolnzs,
+               qcolcnt,qcolidx,qcolnzs,
+               rhs,obj,lbound,ubound,primal,dual,status,
+               big,code,opt,memsiz)
+
+integer*4 m,n,nz,qn,qnz,acolcnt(n),acolidx(nz),qcolcnt(n),qcolidx(qnz),
+          status(n+m),code,
+real*8    acolnzs(nz),qcolnzs(qnz),rhs(m),obj(n),lbound(n+m),ubound(n+m),
+          primal(n+m),dual(n+m),big,opt
+
+where
+
+  memsiz : Number of bytes to be allocated by bpmpd. If memsiz <= 0
+           bpmpd determines the allocatable memory itself. As output
+           memsiz contains the memory in bytes which was used during
+           the process.
+
+       m : number of rows in the constraint matrix
+       n : number of columns in the constraint matrix
+      nz : number of nonzeros in the constraint matrix
+      qn : number of quadratic variables
+     qnz : number of nonzeros in the lower triangular of Q (with diagonals)
+
+ acolcnt : number of nonzeros in each column of A
+ acolidx : A matrix index values
+ acolnzs : A matrix nonzero values
+           It is supposed that the columns are placed continuousely from
+           the first positions of the parallel arrays acolidx-acolnzs.
+
+ qcolcnt : number of nonzeros in each column of the lower triangular part of Q
+ qcolidx : Q matrix index values
+ qcolnzs : Q matrix nonzero values
+           It is supposed that the the lower triangular part (with diagonal)
+           of Q is provided and its columns are placed continuousely from
+           the first positions of the parallel arrays qcolidx-qcolnzs.
+
+     rhs : right hand side
+     obj : objective function
+  lbound :    1 ..   n lower bounds of the variables
+            n+1 .. n+m lower bounds on rows (slacks)
+  ubound : upper bounds (like lbound)
+
+  primal : optimal primal values
+  dual   : optimal dual values
+  status : basic/nonbasic status estimation of variables (1/0)
+
+     big : Represents infinity (recommended big = 1.0d+30 )
+    code : return code
+           if code < 0 --> not enought memory
+           if code = 1 --> solver stopped at feasible point (suboptimal solution)
+           if code = 2 --> optimal solution found
+           if code = 3 --> problem dual infeasible
+           if code = 4 --> problem primal infeasible
+
+    opt : final primal objective value
+
+The DLL will read the parameter file called bpmpd.par (if presented) and
+write a log file called bpmpd.log.
+
+
+  As example the LP problem :
+
+                min x1 + x1*x1 + 2*x1*x2 + 2*x2*x2 + x4*x4
+
+              1x1  + 2x2 + 0x3 -4x4 >=   0
+              3x1  + 0x2 - 2x3 -1x4 <= 100
+       30 >=  1x1  + 3x2 + 3x3 -2x4 >=  10
+
+                  x1,x2,x3 >=0
+                        x1 <= 20
+
+  Then the input parameters:
+
+  m=3, n=4, nz=10, qn=3, qnz=4
+
+  ubound :  (20, big, big,  big,    big,    0,  20)
+  lbound :  ( 0,   0,   0, -big,      0, -big,   0)
+  rhs    :  ( 0, 100,  10)
+  obj    :  ( 1,   0,   0,    0)
+
+acolcnt  :  ( 3,         2,      2,      3)
+acolidx  :  ( 1, 2, 3,   1, 3,   2, 3,   1, 2, 3)
+acolnzs  :  ( 1, 3, 1,   2, 3,  -2, 3,  -4,-1,-2)
+
+qcolcnt  :  ( 2,         1,      0,      1)
+qcolidx  :  ( 1,2,       2,              4)
+qcolnzs  :  ( 2,2,       4,              2)
+
+                                      1        1  1  0         2  2  0
+(Note : 2*x1*x2 = x1*x2+x2*x1   thus  - * Q =  1  2  0 and Q = 2  4  0 )
+                                      2        0  0  1         0  0  2
+
+NOTE:
+The subroutine solves minimization problems, therefore you
+have to change the sign of the objective, if you have maximization
+problem.
+
+NOTE:
+The DLL routine will create a log file called "bpmpd.log" at every call.
+The old bpmpd.log file will be overwritten.
+
+FILES in this distribution:
+---------------------------
+bpmdll.txt         this file
+bpmpd.dll          Win95/NT DLL
+bpmpd.lib          lib file for the DLL
+bpmpd.par          Parameter file for the dll
+sample1.zip        Borland Delphi example to solve the above problem.
+sample2.zip        Borland Delphi example (this application uses mps/qps
+                   files).
+qpdata.ps          Paper about the QPS extension
+
+
+
+The homepage of BPMPD is at:  http://www.sztaki.hu/~meszaros/bpmpd. There
+papers and other informations may be downloaded.
+Comparisons for both LP and QP problems of BPMPD with other solvers are given
+at: http://plato.la.asu.edu/bench.html
+
+
+BPMPD-author: Cs. Meszaros,
+              MTA SzTAKI, Budapest, Hungary
+              mail: H-1518 Budapest, P.O. Box 63.
+              e-mail: meszaros@sztaki.hu
