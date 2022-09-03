@@ -11,7 +11,13 @@ if(NOT EIGEN3_FOUND)
   set(EIGEN3_LIBRARIES ${EIGEN_LIBRARIES})
 endif()
 
-add_compile_options(-std=c++11)
+find_package(osqp REQUIRED)
+
+find_package(OsqpEigen REQUIRED)
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 ## Find catkin and any catkin packages
 find_package(catkin REQUIRED COMPONENTS 
@@ -34,6 +40,7 @@ include_directories(include
 
 add_library(eigen_linear_mpc
 src/EigenLinearMpc.cpp
+src/OsqpEigenOptimization.cpp
 #src/BpmpdOptimization.cpp
 )
 
@@ -41,6 +48,8 @@ src/EigenLinearMpc.cpp
 #set_target_properties(eigen_linear_mpc PROPERTIES COMPILE_FLAGS "-fPIC")
 
 target_link_libraries(eigen_linear_mpc 
+    PRIVATE osqp::osqp
+    OsqpEigen::OsqpEigen
     ${catkin_LIBRARIES}
     #${BPMPD_LIBRARY64}
     )
@@ -50,12 +59,18 @@ ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
 
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
 
 add_executable(test_example
   src/test_example.cpp
   src/EigenLinearMpc.cpp
+  src/OsqpEigenOptimization.cpp
 )
 
 target_link_libraries(test_example 
+    PRIVATE osqp::osqp
+    OsqpEigen::OsqpEigen
     ${catkin_LIBRARIES}
-    )
+)

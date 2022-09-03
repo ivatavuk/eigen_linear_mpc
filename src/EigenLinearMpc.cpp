@@ -1,4 +1,4 @@
-#include "EigenLinearMpc.h"
+#include "EigenLinearMpc.hpp"
 
 // returns input_mat^(power)
 MatNd matrixPow(const MatNd &input_mat, uint32_t power) {

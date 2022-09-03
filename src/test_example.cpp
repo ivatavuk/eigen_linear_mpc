@@ -1,4 +1,4 @@
-#include "EigenLinearMpc.h"
+#include "EigenLinearMpc.hpp"
 
 int main()
 {
