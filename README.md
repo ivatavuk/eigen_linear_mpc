@@ -3,8 +3,11 @@
 
 # TODO
 - [x] Switch to Osqp
-- [ ] Write example
-- [ ] Add plotting for example
+- [x] Write example
+- [x] Add plotting for example
+- [ ] Add better constructor, enum type of mpc
+- [ ] Add constraints
+- [ ] Write more complex example
 - [ ] Remove OsqpEigenOptimization and QpProblem files to different package - larics_qp_common or smth
 - [ ] Switch from VecNd MatNd to real types
 - [ ] Add D matrix
