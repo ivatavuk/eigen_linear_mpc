@@ -5,6 +5,7 @@
 - [x] Switch to Osqp
 - [ ] Write example
 - [ ] Add plotting for example
+- [ ] Remove OsqpEigenOptimization and QpProblem files to different package - larics_qp_common or smth
 - [ ] Add D matrix
 - [ ] Sparse matrices?
 - [ ] Remove ROS - build with cmake
