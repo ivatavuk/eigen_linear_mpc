@@ -29,7 +29,7 @@
               y(k) =    C * x(k)
 
         - MPC II:
-          min  	Q * ||Y - Y_d||^2 + ||W_u * U||^2 + ||W_x * X||^2
+          min  	||Y - Y_d||^2 + ||W_u * U||^2 + ||W_x * X||^2
           U
             
           s.t. 	(implicit constraints)
@@ -89,34 +89,20 @@ struct LinearSystem {
 
 class MPC {
 public:
-  MPC() {};
-  // calls setMPCdynamics(LinearSystem linear_system, uint32_t horizon)
-  MPC(const LinearSystem &linear_system, uint32_t horizon, const VecNd &Y_d, const VecNd &x0, double Q, double R); 
-  ~MPC() {};
-
-  //Sets A_mpc, B_mpc, C_mpc
-  void setupMpcDynamics();
-
+  MPC(const LinearSystem &linear_system, uint32_t horizon, 
+      const VecNd &Y_d, const VecNd &x0, double Q, double R); 
+  MPC(const LinearSystem &linear_system, uint32_t horizon, 
+      const VecNd &Y_d, const VecNd &x0, const MatNd &w_u, 
+      const MatNd &w_x); 
+  
   void setYd(const VecNd &Y_d_in); // set Y_d from an Eigen vector Nd
 
   void initializeSolver();
   
-  // MPC I
-  void setupQpMatrices1(); // setup qp problem
-  // MPC II
-  void setupQpMatrices2(); // setup qp problem
-
-  // THIS IS SLOW!! - speed up using sparse matrices
-  void updateQpMatrices2(const VecNd &Y_d_in, const VecNd &x0); // update qp problem for new Y_d_in and x0
-  
   VecNd calculateX(const VecNd &U_in) const;
   VecNd calculateY(const VecNd &U_in) const;
 
-  void setWx(const MatNd &w_x_in);
-  void setWu(const MatNd &w_u_in);
-
   DenseQpProblem getQpProblem() const;
-
   VecNd solve() const;
 
 private:
@@ -148,6 +134,18 @@ private:
   };
 
   mpc_type mpc_type_;
+
+  void setWx(const MatNd &w_x_in);
+  void setWu(const MatNd &w_u_in);
+
+  //Sets A_mpc, B_mpc, C_mpc
+  void setupMpcDynamics();
+  // MPC1
+  void setupQpMatrices1(); 
+  // MPC2
+  void setupQpMatrices2(); 
+  // THIS IS SLOW!! - speed up using sparse matrices
+  void updateQpMatrices2(const VecNd &Y_d_in, const VecNd &x0); // update qp problem for new Y_d_in and x0
 };
 }
 #endif //EIGENLINEARMPC_H_

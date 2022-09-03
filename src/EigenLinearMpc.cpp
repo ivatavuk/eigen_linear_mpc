@@ -63,6 +63,17 @@ EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
   setupMpcDynamics();
 }
 
+EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
+                          const VecNd &Y_d, const VecNd &x0, const MatNd &w_u, 
+                          const MatNd &w_x ) 
+: linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0)
+{
+  mpc_type_ = MPC2;
+  setupMpcDynamics();
+  setWu(w_u);
+  setWx(w_x);
+}
+
 void EigenLinearMpc::MPC::setupMpcDynamics() 
 {
   uint32_t n_x = linear_system_.n_x;
