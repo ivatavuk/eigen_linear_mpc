@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(eigen_linear_mpc)
 
+FIND_PACKAGE (PythonLibs 2.7)
 # Find Eigen
 find_package(Eigen3)
 if(NOT EIGEN3_FOUND)
@@ -36,6 +37,7 @@ catkin_package(INCLUDE_DIRS include
 include_directories(include
     ${catkin_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIR}
+    ${PYTHON_INCLUDE_DIRS}
     )
 
 add_library(eigen_linear_mpc
@@ -73,4 +75,5 @@ target_link_libraries(test_example
     PRIVATE osqp::osqp
     OsqpEigen::OsqpEigen
     ${catkin_LIBRARIES}
+    ${PYTHON_LIBRARIES}
 )

@@ -6,8 +6,8 @@
   Structures:
     LinearSystem
       - describes a linear system of the following form: 
-          x(k+1) = A * x(k) + B * u(k)
-          y(k) = C * x(k) + D * u(k)
+          x(k+1) =  A * x(k) + B * u(k)
+          y(k) =    C * x(k) + D * u(k)
 
     QP	
       - describes a Quadratic Programming problem of the following form: 
@@ -25,16 +25,16 @@
           U
             
           s.t.	(implicit constraints)
-              x(k+1) = A * x(k) + B * u(k)
-              y(k) = C * x(k)
+              x(k+1) =  A * x(k) + B * u(k)
+              y(k) =    C * x(k)
 
         - MPC II:
           min  	Q * ||Y - Y_d||^2 + ||W_u * U||^2 + ||W_x * X||^2
           U
             
           s.t. 	(implicit constraints)
-              x(k+1) = A * x(k) + B * u(k)
-              y(k) = C * x(k)
+              x(k+1) =  A * x(k) + B * u(k)
+              y(k) =    C * x(k)
       
 
       - produces matrices for the QP solver
@@ -62,6 +62,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 
+#include "OsqpEigenOptimization.hpp"
+
 typedef Eigen::VectorXd VecNd;
 typedef Eigen::MatrixXd MatNd;
 
@@ -71,8 +73,8 @@ namespace EigenLinearMpc {
 
 struct LinearSystem {
   LinearSystem() {};
-  LinearSystem( 	const MatNd &A, const MatNd &B, 
-          const MatNd &C, const MatNd &D);
+  LinearSystem( const MatNd &A, const MatNd &B, 
+                const MatNd &C, const MatNd &D );
   ~LinearSystem() {};
 
   //throws an error if the system is ill defined
@@ -83,29 +85,6 @@ struct LinearSystem {
   uint32_t n_u; // u vector dimension
   uint32_t n_y; // y vector dimension
   MatNd A, B, C, D;
-};
-
-struct QpProblem {
-  QpProblem() {};
-  QpProblem( const MatNd &A_qp_in, const VecNd &b_qp_in, 
-    const MatNd &A_eq_in, const VecNd &b_eq_in, 
-    const MatNd &A_ieq_in, const VecNd &b_ieq_in);
-  ~QpProblem() {};
-  
-  //updates all QP matrices
-  void problemSetup(	const MatNd &A_qp, const VecNd &b_qp, 
-            const MatNd &A_eq, const VecNd &b_eq,
-            const MatNd &A_ieq, const VecNd &b_ieq );
-
-  void setAqp (const MatNd &A_qp) { this->A_qp = A_qp; };
-  void setBqp (const VecNd &b_qp) { this->b_qp = b_qp; };
-  void setAeq (const MatNd &A_eq) { this->A_eq = A_eq; };
-  void setBeq (const VecNd &b_eq) { this->b_eq = b_eq; };
-  void setAieq (const MatNd &A_ieq) { this->A_ieq = A_ieq; };
-  void setBieq (const VecNd &b_ieq) { this->b_ieq = b_ieq; };
-            
-  MatNd A_qp, A_eq, A_ieq;
-  VecNd b_qp, b_eq, b_ieq;
 };
 
 class MPC {
@@ -146,7 +125,9 @@ class MPC {
     void setWx(const MatNd &w_x_in);
     void setWu(const MatNd &w_u_in);
 
-    QpProblem getQpProblem() const ;
+    DenseQpProblem getQpProblem() const ;
+
+    VecNd solve() const;
 
   private:
 
@@ -156,7 +137,7 @@ class MPC {
     MatNd A_mpc_, B_mpc_, C_mpc_; // mpc dynamics matrices
 
     VecNd Y_d_; //refrence output
-    QpProblem qp_problem_;
+    DenseQpProblem qp_problem_;
     double Q_, R_; 
 
     MatNd W_u_, w_u_;

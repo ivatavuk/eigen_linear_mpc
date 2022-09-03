@@ -51,26 +51,6 @@ void EigenLinearMpc::LinearSystem::checkMatrixDimensions() const {
   }
 }
 
-// -------------- QP ------------------
-EigenLinearMpc::QpProblem::QpProblem(	const MatNd &A_qp, const VecNd &b_qp, 
-          const MatNd &A_eq, const VecNd &b_eq,
-          const MatNd &A_ieq, const VecNd &b_ieq ) 
-  : 	A_qp(A_qp), b_qp(b_qp), 
-    A_eq(A_eq), b_eq(b_eq), 
-    A_ieq(A_ieq), b_ieq(b_ieq) {};
-
-void EigenLinearMpc::QpProblem::problemSetup(	const MatNd &A_qp, const VecNd &b_qp, 
-                  const MatNd &A_eq, const VecNd &b_eq,
-                  const MatNd &A_ieq, const VecNd &b_ieq )  
-{
-  this->A_qp = A_qp;
-  this->b_qp = b_qp;
-  this->A_eq = A_eq;
-  this->b_eq = b_eq;
-  this->A_ieq = A_ieq;
-  this->b_ieq = b_ieq;
-}
-
 // -------------- MPC -----------------
 
 EigenLinearMpc::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon) {
@@ -143,7 +123,6 @@ void EigenLinearMpc::MPC::setYd(const std::vector<double> &Y_d_in, uint32_t star
 
 void EigenLinearMpc::MPC::setupQpMatrices1(const VecNd &x0) {
   uint32_t n_u = linear_system_.n_u;
-
   C_A_ = C_mpc_*A_mpc_;
   C_B_ = C_mpc_*B_mpc_;
 
@@ -155,7 +134,7 @@ void EigenLinearMpc::MPC::setupQpMatrices1(const VecNd &x0) {
   MatNd A_ieq = MatNd::Zero(0, N_ * n_u);
   MatNd b_ieq = VecNd::Zero(0);
 
-  qp_problem_.problemSetup(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
+  qp_problem_ = DenseQpProblem(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
 }
 
 void EigenLinearMpc::MPC::setupQpMatrices2(const VecNd &x0) {
@@ -189,7 +168,7 @@ void EigenLinearMpc::MPC::setupQpMatrices2(const VecNd &x0) {
   MatNd A_ieq = MatNd::Zero(0, N_ * n_u);
   MatNd b_ieq = VecNd::Zero(0);
 
-  qp_problem_.problemSetup(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
+  qp_problem_ = DenseQpProblem(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
 }
 
 void EigenLinearMpc::MPC::updateQpMatrices2(const VecNd &Y_d_in, const VecNd &x0) {
@@ -201,7 +180,7 @@ void EigenLinearMpc::MPC::updateQpMatrices2(const VecNd &Y_d_in, const VecNd &x0
   VecNd b_qp = (	Q_*(C_B_*x0 - Y_d_).transpose()*C_A_ 
           + (W_x_B_*x0).transpose()*(W_x_A_)
           ).transpose();
-  qp_problem_.setBqp(b_qp);
+  qp_problem_.b_qp = b_qp;
 }
 
 VecNd EigenLinearMpc::MPC::calculateX(const VecNd &U_in, const VecNd &x0) const {
@@ -278,6 +257,15 @@ void EigenLinearMpc::MPC::setWx(const MatNd &w_x_in) {
   W_x_ = W_x_temp;
 }
 
-EigenLinearMpc::QpProblem EigenLinearMpc::MPC::getQpProblem() const {
+DenseQpProblem EigenLinearMpc::MPC::getQpProblem() const {
   return qp_problem_;
 }
+
+VecNd EigenLinearMpc::MPC::solve() const 
+{
+  OsqpEigenOpt osqp_eigen_opt;
+  osqp_eigen_opt.setupQP(qp_problem_);
+
+  osqp_eigen_opt.initializeSolver(false);
+  return osqp_eigen_opt.solveProblem();
+} 
