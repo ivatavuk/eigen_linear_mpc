@@ -2,6 +2,7 @@
 
 
 # TODO
+- [ ] Switch to Osqp
 - [ ] Write example
 - [ ] Add plotting for example
 - [ ] Add D matrix
