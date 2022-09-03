@@ -1,6 +1,8 @@
 #include "EigenLinearMpc.hpp"
 #include "matplotlibcpp.hpp"
 
+#include "ChronoCall.hpp"
+
 namespace plt = matplotlibcpp;  
 
 VecNd generate_lawnmower_vec(	uint32_t len, uint32_t lawnmower_period, 
@@ -25,9 +27,7 @@ std::vector<double> eigen2stdVec(	VecNd eigen_vec )
 
 int main()
 {
-  std::cout << "testing started...\n";
-
-  uint32_t horizon = 100;
+  uint32_t horizon = 200;
   uint32_t ref_period = 20;
   
   // define lawnmower reference
@@ -62,7 +62,11 @@ int main()
   VecNd x0 = VecNd::Zero(2);
   mpc.setupQpMatrices1(x0); //TODO check x0 dimension and also in constructor
   auto U_sol = mpc.solve();
-  auto y = mpc.calculateY(U_sol, x0);
+  VecNd y;
+  
+  ChronoCall(microseconds,
+    y = mpc.calculateY(U_sol, x0);
+  );
 
   plt::plot(eigen2stdVec(lawnmower_vec));
   plt::plot(eigen2stdVec(y));
