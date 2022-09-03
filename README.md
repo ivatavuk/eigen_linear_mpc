@@ -10,9 +10,8 @@
 - [ ] Add constraints
 - [ ] Write more complex example
 - [ ] Remove OsqpEigenOptimization and QpProblem files to different package - larics_qp_common or smth
-- [ ] Switch from VecNd MatNd to real types
-- [ ] Add D matrix
 - [ ] Sparse matrices!
+- [ ] Add D matrix
 - [ ] Remove ROS - build with cmake
 - [ ] Write nice README
 - [ ] Add license info
