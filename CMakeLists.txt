@@ -34,12 +34,11 @@ include_directories(include
 
 add_library(eigen_linear_mpc
 src/EigenLinearMpc.cpp
-src/BpmpdOptimization.cpp
+#src/BpmpdOptimization.cpp
 )
 
-#set_target_properties(eigen_linear_mpc PROPERTIES COMPILE_FLAGS "-fno-pie" LINK_FLAGS "-no-pie")
-
-set_target_properties(eigen_linear_mpc PROPERTIES COMPILE_FLAGS "-fPIC")
+#set_target_properties(eigen_linear_mpc PROPERTIES COMPILE_FLAGS "-fno-pie -fPIC" LINK_FLAGS "-no-pie")
+#set_target_properties(eigen_linear_mpc PROPERTIES COMPILE_FLAGS "-fPIC")
 
 target_link_libraries(eigen_linear_mpc 
     ${catkin_LIBRARIES}
@@ -50,3 +49,13 @@ install(TARGETS eigen_linear_mpc
 ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION})
+
+
+add_executable(test_example
+  src/test_example.cpp
+  src/EigenLinearMpc.cpp
+)
+
+target_link_libraries(test_example 
+    ${catkin_LIBRARIES}
+    )
