@@ -88,68 +88,66 @@ struct LinearSystem {
 };
 
 class MPC {
-  public:
-    MPC() {};
-    // calls setMPCdynamics(LinearSystem linear_system, uint32_t horizon)
-    MPC(const LinearSystem &linear_system, uint32_t horizon); 
+public:
+  MPC() {};
+  // calls setMPCdynamics(LinearSystem linear_system, uint32_t horizon)
+  MPC(const LinearSystem &linear_system, uint32_t horizon, const VecNd &Y_d, const VecNd &x0, double Q, double R); 
+  ~MPC() {};
 
-    ~MPC() {};
+  //Sets A_mpc, B_mpc, C_mpc
+  void setupMpcDynamics();
 
+  void setYd(const VecNd &Y_d_in); // set Y_d from an Eigen vector Nd
 
-    void setLinearSystem(const LinearSystem &linear_system) { linear_system_ = linear_system; };
-    void setHorizon(uint32_t horizon) { N_ = horizon; };
+  void initializeSolver();
+  
+  // MPC I
+  void setupQpMatrices1(); // setup qp problem
+  // MPC II
+  void setupQpMatrices2(); // setup qp problem
 
-    // sets member variables linear_system_, N_, A_mpc, B_mpc, C_mpc
-    void setMpcDynamics(const LinearSystem &linear_system, uint32_t horizon);
+  // THIS IS SLOW!! - speed up using sparse matrices
+  void updateQpMatrices2(const VecNd &Y_d_in, const VecNd &x0); // update qp problem for new Y_d_in and x0
+  
+  VecNd calculateX(const VecNd &U_in) const;
+  VecNd calculateY(const VecNd &U_in) const;
 
-    // sets A_mpc, B_mpc, C_mpc for current members linear_system_ and N_
-    void setMpcDynamics(); 
+  void setWx(const MatNd &w_x_in);
+  void setWu(const MatNd &w_u_in);
 
-    void setYd(const std::vector<double> &Y_d_in, uint32_t start_index); // set Y_d from a vector<double>
-    void setYd(const VecNd &Y_d_in); // set Y_d from an Eigen vector Nd
-    
-    void setQandR(double Q_in, double R_in); 
-    void setQ(double Q_in); 
+  DenseQpProblem getQpProblem() const;
 
-    // MPC I
-    void setupQpMatrices1(const VecNd &x0); // setup qp problem
-    // MPC II
-    void setupQpMatrices2(const VecNd &x0); // setup qp problem
+  VecNd solve() const;
 
-    // THIS IS SLOW!! - speed up using sparse matrices
-    void updateQpMatrices2(const VecNd &Y_d_in, const VecNd &x0); // update qp problem for new Y_d_in and x0
-    
-    VecNd calculateX(const VecNd &U_in, const VecNd &x0) const;
-    VecNd calculateY(const VecNd &U_in, const VecNd &x0) const;
+private:
 
-    void setWx(const MatNd &w_x_in);
-    void setWu(const MatNd &w_u_in);
+  uint32_t N_; // mpc prediction horizon
+  LinearSystem linear_system_; // linear_system
+  
+  MatNd A_mpc_, B_mpc_, C_mpc_; // mpc dynamics matrices
 
-    DenseQpProblem getQpProblem() const ;
+  VecNd Y_d_; //refrence output
+  VecNd x0_; //initial state
 
-    VecNd solve() const;
+  DenseQpProblem qp_problem_;
+  double Q_, R_; 
 
-  private:
+  MatNd W_u_, w_u_;
+  MatNd W_x_, w_x_;
 
-    uint32_t N_; // mpc prediction horizon
-    LinearSystem linear_system_; // linear_system
-    
-    MatNd A_mpc_, B_mpc_, C_mpc_; // mpc dynamics matrices
+  // matrices saved for faster QP problem update
+  MatNd C_A_; // C_mpc * A_mpc
+  MatNd C_B_; // C_mpc * B_mpc
+  MatNd W_x_A_; // W_x * A_mpc
+  MatNd W_x_B_; // W_x * B_mpc
 
-    VecNd Y_d_; //refrence output
-    DenseQpProblem qp_problem_;
-    double Q_, R_; 
+  enum mpc_type
+  {
+    MPC1 = 0,
+    MPC2 = 1
+  };
 
-    MatNd W_u_, w_u_;
-    MatNd W_x_, w_x_;
-
-    // matrices saved for faster QP problem update
-    MatNd C_A_; // C_mpc * A_mpc
-    MatNd C_B_; // C_mpc * B_mpc
-    MatNd W_x_A_; // W_x * A_mpc
-    MatNd W_x_B_; // W_x * B_mpc
+  mpc_type mpc_type_;
 };
-
 }
-
 #endif //EIGENLINEARMPC_H_
