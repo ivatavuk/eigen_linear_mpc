@@ -9,3 +9,4 @@
 - [ ] Sparse matrices?
 - [ ] Remove ROS - build with cmake
 - [ ] Write nice README
+- [ ] Add license info
