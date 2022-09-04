@@ -73,12 +73,31 @@ $$\begin{equation}
 \end{aligned}
 \end{equation}$$
 
+$$\begin{equation}
+\boldsymbol{W}_{u} =
+\begin{bmatrix}
+\boldsymbol{w} _u & 0 & \cdots & 0\\
+0 & \boldsymbol{w} _u & \cdots & 0\\
+0 & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & \boldsymbol{w} _{u}
+\end{bmatrix} \ \ \ \ \ \ \
+\boldsymbol{W} _{x} =
+\begin{bmatrix}
+\boldsymbol{w}_x & 0 & \cdots & 0\\
+0 & \boldsymbol{w}_x & \cdots & 0\\
+0 & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & \boldsymbol{w}_x
+\end{bmatrix}
+\end{equation}$$
+
 System output vector $\boldsymbol{Y}$ is calculated from $\boldsymbol{U}$ via the dynamics equations over the entire horizon:
 
-$$\boldsymbol{X} = \boldsymbol{A}_{MPC} \boldsymbol{U} + \boldsymbol{B} _{MPC} \boldsymbol{x}_0$$
+$$\boldsymbol{X} = \boldsymbol{A}_{MPC} \ \boldsymbol{U} + \boldsymbol{B} _{MPC} \ \boldsymbol{x}_0$$
 
 $$
-\boldsymbol{Y} = \boldsymbol{C}_{MPC} \boldsymbol{X}
+\boldsymbol{Y} = \boldsymbol{C}_{MPC} \ \boldsymbol{X}
 $$
 
 ## 📄 Dependences
