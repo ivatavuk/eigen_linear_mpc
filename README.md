@@ -75,6 +75,31 @@ $$
 \boldsymbol{Y} = \boldsymbol{C}_{mpc} \boldsymbol{X}
 $$
 
+## 📄 Dependences
+This project depends on [`osqp`](https://github.com/ivatavuk/osqp) and [osqp-eigen](https://github.com/ivatavuk/osqp-eigen)
+
+It is recommended to build [osqp-eigen](https://github.com/ivatavuk/osqp-eigen) from source, with:
+
+    -DOSQP_EIGEN_DEBUG_OUTPUT=OFF 
+    
+to suppress infeasibility warnings.
+
+## 🛠️ Usage
+
+### ⚙️ Build from source
+
+1. Clone the repository to a catkin workspace
+2. Build it with
+   ```
+   catkin build eigen_ptsc
+   ```
+
+## 📝 License
+
+Materials in this repository are distributed under the following license:
+
+> All software is licensed under the BSD 3-Clause License.
+
 ## TODO
 ### High priority
 - [x] Switch to Osqp
@@ -83,6 +108,8 @@ $$
 - [x] Add better constructor, enum type of mpc
 - [x] Add better constructor type 2
 - [ ] Throw errors for all wrong dimensions
+    - [x] Y_d and x0
+    - [ ] w_u, w_y
 - [ ] Add constraints
 - [ ] Write more complex example
 - [ ] Remove OsqpEigenOptimization and QpProblem files to different package - larics_qp_common or smth
@@ -94,7 +121,7 @@ $$
     - [ ] Write usage directions
     - [ ] Switch equations to pics
 - [ ] Search TODOs in code
-- [ ] Add license info
+- [x] Add license info
 
 ### Medium priority
 - [ ] Allow continuous systems
