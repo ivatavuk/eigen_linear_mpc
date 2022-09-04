@@ -25,27 +25,32 @@ void EigenLinearMpc::LinearSystem::checkMatrixDimensions() const
   std::ostringstream msg;
 
   // Check matrix dimensions
-  if ((int)A.rows() != A.cols()) {
+  if ((int)A.rows() != A.cols()) 
+  {
     msg << "set_system: Matrix 'A' needs to be a square matrix\n A.dimensions = (" << A.rows() << " x " 
         << A.cols() << ")";
     throw std::logic_error(msg.str());
   }
-  if ((int)A.rows() != B.rows()) {
+  if ((int)A.rows() != B.rows()) 
+  {
     msg << "set_system: 'A' and 'B' matrices need to have an equal number of rows\n A.rows = " << A.rows() << ", B.rows =  " 
         << B.rows() << ")";
     throw std::logic_error(msg.str());
   }
-  if ((int)A.cols() != C.cols()) {
+  if ((int)A.cols() != C.cols()) 
+  {
     msg << "set_system: A.cols (" << A.cols() << ") != C.cols (" 
         << C.cols() << ")";
     throw std::logic_error(msg.str());
   }
-  if ((int)C.rows() != D.rows()) {
+  if ((int)C.rows() != D.rows()) 
+  {
     msg << "set_system: C.rows (" << C.rows() << ") != D.rows (" 
         << D.rows() << ")";
     throw std::logic_error(msg.str());
   }
-  if ((int)D.cols() != B.cols()) {
+  if ((int)D.cols() != B.cols()) 
+  {
     msg << "set_system: D.cols (" << D.cols() << ") != B.cols (" 
         << B.cols() << ")";
     throw std::logic_error(msg.str());
@@ -60,6 +65,7 @@ EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), Q_(Q), R_(R), x0_(x0)
 {
   mpc_type_ = MPC1;
+  checkMatrixDimensions();
   setupMpcDynamics();
 }
 
@@ -69,9 +75,29 @@ EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0)
 {
   mpc_type_ = MPC2;
+  checkMatrixDimensions();
   setupMpcDynamics();
   setWu(w_u);
   setWx(w_x);
+}
+
+void EigenLinearMpc::MPC::checkMatrixDimensions() const 
+{
+  std::ostringstream msg;
+
+  // Check matrix dimensions
+  if ((int)Y_d_.rows() != N_ * linear_system_.n_y) 
+  {
+    msg << "MPC: Vector 'Y_d' size error\n Y_d_.rows() = " << Y_d_.rows() 
+        << ", needs to be = " << N_ * linear_system_.n_y << "\n";
+    throw std::logic_error(msg.str());
+  }
+  if ((int)x0_.rows() != linear_system_.n_x) 
+  {
+    msg << "MPC: Vector 'x0' size error\n x0.rows() = " << x0_.rows() 
+        << ", needs to be = " << linear_system_.n_x << "\n";
+    throw std::logic_error(msg.str());
+  }
 }
 
 void EigenLinearMpc::MPC::setupMpcDynamics() 

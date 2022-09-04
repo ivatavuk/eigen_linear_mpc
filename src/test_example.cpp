@@ -36,6 +36,7 @@ int main()
   double Q = 10000.0;
   double R = 5.0;
   Eigen::VectorXd x0 = Eigen::VectorXd::Zero(2);
+  x0 << 1, 0;
   // define lawnmower reference
   Eigen::VectorXd Y_d = generate_lawnmower_vec(horizon, 20, 1.0, 0.0);
 

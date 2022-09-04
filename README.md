@@ -1,5 +1,6 @@
-# Linear MPC library using Eigen and OSQP QP solver
-Linear MPC library using Eigen QSQP solver 
+# Reference tracking Linear MPC library using Eigen and OSQP QP solver
+Reference tracking Linear MPC library using Eigen QSQP solver 
+
 ## 🖥️ Using the library
 
 Easy to use library, using Eigen matrices and vectors:
@@ -81,6 +82,7 @@ $$
 - [x] Add plotting for example
 - [x] Add better constructor, enum type of mpc
 - [x] Add better constructor type 2
+- [ ] Throw errors for all wrong dimensions
 - [ ] Add constraints
 - [ ] Write more complex example
 - [ ] Remove OsqpEigenOptimization and QpProblem files to different package - larics_qp_common or smth

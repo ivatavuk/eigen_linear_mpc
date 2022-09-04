@@ -146,6 +146,8 @@ private:
   void setupQpMatrices2(); 
   // THIS IS SLOW!! - speed up using sparse matrices
   void updateQpMatrices2(const VecNd &Y_d_in, const VecNd &x0); // update qp problem for new Y_d_in and x0
+
+  void checkMatrixDimensions() const; 
 };
 }
 #endif //EIGENLINEARMPC_H_
