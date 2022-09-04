@@ -76,13 +76,8 @@ $$
 $$
 
 ## 📄 Dependences
+
 This project depends on [`osqp`](https://github.com/ivatavuk/osqp) and [osqp-eigen](https://github.com/ivatavuk/osqp-eigen)
-
-It is recommended to build [osqp-eigen](https://github.com/ivatavuk/osqp-eigen) from source, with:
-
-    -DOSQP_EIGEN_DEBUG_OUTPUT=OFF 
-    
-to suppress infeasibility warnings.
 
 ## 🛠️ Usage
 

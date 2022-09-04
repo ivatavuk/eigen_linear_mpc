@@ -24,10 +24,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(catkin REQUIRED COMPONENTS 
                 roscpp rospy std_msgs )
 
-
-set(BPMPD_LIBRARY64 "${CMAKE_SOURCE_DIR}/lib/bpmpd_linux64.a")
-set(BPMPD_LIBRARY "${CMAKE_SOURCE_DIR}/lib/bpmpd_linux64.a")
-
 ## Declare a catkin package
 catkin_package(INCLUDE_DIRS include
                 LIBRARIES eigen_linear_mpc
@@ -43,17 +39,13 @@ include_directories(include
 add_library(eigen_linear_mpc
 src/EigenLinearMpc.cpp
 src/OsqpEigenOptimization.cpp
-#src/BpmpdOptimization.cpp
 )
 
-#set_target_properties(eigen_linear_mpc PROPERTIES COMPILE_FLAGS "-fno-pie -fPIC" LINK_FLAGS "-no-pie")
-#set_target_properties(eigen_linear_mpc PROPERTIES COMPILE_FLAGS "-fPIC")
 
 target_link_libraries(eigen_linear_mpc 
     PRIVATE osqp::osqp
     OsqpEigen::OsqpEigen
     ${catkin_LIBRARIES}
-    #${BPMPD_LIBRARY64}
     )
 
 install(TARGETS eigen_linear_mpc
