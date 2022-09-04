@@ -1,5 +1,5 @@
 # Reference tracking Linear MPC library using Eigen and OSQP QP solver
-Reference tracking Linear MPC library using Eigen QSQP solver 
+Reference tracking Linear MPC library using Eigen OSQP solver 
 
 ## 🖥️ Using the library
 
