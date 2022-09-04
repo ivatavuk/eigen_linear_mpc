@@ -135,8 +135,8 @@ private:
 
   mpc_type mpc_type_;
 
-  void setWx(const MatNd &w_x_in);
-  void setWu(const MatNd &w_u_in);
+  void setWx();
+  void setWu();
 
   //Sets A_mpc, B_mpc, C_mpc
   void setupMpcDynamics();

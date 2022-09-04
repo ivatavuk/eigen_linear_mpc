@@ -72,13 +72,13 @@ EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
 EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
                           const VecNd &Y_d, const VecNd &x0, const MatNd &w_u, 
                           const MatNd &w_x ) 
-: linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0)
+: linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), w_u_(w_u), w_x_(w_x)
 {
   mpc_type_ = MPC2;
   checkMatrixDimensions();
   setupMpcDynamics();
-  setWu(w_u);
-  setWx(w_x);
+  setWu();
+  setWx();
 }
 
 void EigenLinearMpc::MPC::checkMatrixDimensions() const 
@@ -230,24 +230,23 @@ VecNd EigenLinearMpc::MPC::calculateY(const VecNd &U_in) const
   return Y;
 }
 
-void EigenLinearMpc::MPC::setWu(const MatNd &w_u_in) 
+void EigenLinearMpc::MPC::setWu() 
 {
   std::ostringstream msg;
-  w_u_ = w_u_in;
 
-  uint32_t n_r = w_u_in.rows();
-  uint32_t n_c = w_u_in.cols();
+  uint32_t n_r = w_u_.rows();
+  uint32_t n_c = w_u_.cols();
   uint32_t n_u = linear_system_.n_u;
 
   if ((int)n_r != n_c) 
   {
-    msg << "set_w_u: Input matrix needs to be a square matrix\n mat.dimensions = (" << n_r << " x " 
+    msg << "set_w_u: Input matrix needs to be a square matrix\n mat.dimensions = (" << n_r << " != " 
         << n_c << ")";
     throw std::logic_error(msg.str());
   }
   if ((int)n_r != n_u) 
   {
-    msg << "set_w_u: Input matrix needs to have number of rows equal to n_u\n (" << n_r << " x " 
+    msg << "set_w_u: Input matrix needs to have number of rows equal to n_u\n (" << n_r << " != " 
         << n_u << ")";
     throw std::logic_error(msg.str());
   }
@@ -260,29 +259,28 @@ void EigenLinearMpc::MPC::setWu(const MatNd &w_u_in)
     {
       if (i == j) 
       {
-        W_u_temp.block( n_r * i, n_c * j, n_r, n_c) = w_u_in;
+        W_u_temp.block( n_r * i, n_c * j, n_r, n_c) = w_u_;
       }
     }
   }
   W_u_ = W_u_temp;
 }
 
-void EigenLinearMpc::MPC::setWx(const MatNd &w_x_in) 
+void EigenLinearMpc::MPC::setWx() 
 {
   std::ostringstream msg;
-  w_x_ = w_x_in;
 
-  uint32_t n_r = w_x_in.rows();
-  uint32_t n_c = w_x_in.cols();
+  uint32_t n_r = w_x_.rows();
+  uint32_t n_c = w_x_.cols();
   uint32_t n_x = linear_system_.n_x;
 
   if ((int)n_r != n_c) {
-    msg << "set_w_x: Input matrix needs to be a square matrix\n mat.dimensions = (" << n_r << " x " 
+    msg << "set_w_x: Input matrix needs to be a square matrix\n mat.dimensions = (" << n_r << " != " 
         << n_c << ")";
     throw std::logic_error(msg.str());
   }
   if ((int)n_r != n_x) {
-    msg << "set_w_x: Input matrix needs to have number of rows equal to n_x\n (" << n_r << " x " 
+    msg << "set_w_x: Input matrix needs to have number of rows equal to n_x\n (" << n_r << " != " 
         << n_x << ")";
     throw std::logic_error(msg.str());
   }
@@ -295,7 +293,7 @@ void EigenLinearMpc::MPC::setWx(const MatNd &w_x_in)
     {
       if (i == j) 
       {
-        W_x_temp.block( n_r * i, n_c * j, n_r, n_c) = w_x_in;
+        W_x_temp.block( n_r * i, n_c * j, n_r, n_c) = w_x_;
       }
     }
   }
