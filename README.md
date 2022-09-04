@@ -75,9 +75,7 @@ $$\begin{equation}
 
 System output vector $\boldsymbol{Y}$ is calculated from $\boldsymbol{U}$ via the dynamics equations over the entire horizon:
 
-$$
-\boldsymbol{X} = \boldsymbol{A}_{MPC} \boldsymbol{U} + \boldsymbol{B}_{MPC} \boldsymbol{x}_0
-$$
+$$\boldsymbol{X} = \boldsymbol{A}_{MPC} \boldsymbol{U} + \boldsymbol{B} _{MPC} \boldsymbol{x}_0$$
 
 $$
 \boldsymbol{Y} = \boldsymbol{C}_{MPC} \boldsymbol{X}
