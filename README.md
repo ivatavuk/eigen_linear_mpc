@@ -24,53 +24,61 @@ auto U_sol = mpc.solve();
 
 
 Discrete linear system:
+
 $$
-	\boldsymbol{x}(k+1) = \boldsymbol{A}\boldsymbol{x}(k) + \boldsymbol{B}\boldsymbol{u}(k)
+\boldsymbol{x}(k+1) = \boldsymbol{A}\boldsymbol{x}(k) + \boldsymbol{B}\boldsymbol{u}(k)
 $$
+
 $$
-	\boldsymbol{y}(k) = \boldsymbol{C}\boldsymbol{x}(k)
+\boldsymbol{y}(k) = \boldsymbol{C}\boldsymbol{x}(k)
 $$
+
+  
 
 MPC 1:
 
-$\begin{equation}
-	\begin{aligned}
-        & \underset{\boldsymbol{U}}{\text{min}} & & 
-        Q||\boldsymbol{Y} - \boldsymbol{Y}_d||^2 + R||\boldsymbol{U}||^2\\
-        & \text{s.t.} & &  \boldsymbol{x}(k+1) =
-        \boldsymbol{A} \boldsymbol{x}(k) + 
-        \boldsymbol{B} \boldsymbol{u}(k) \\
-        & & & \boldsymbol{y}(k) =
-        \boldsymbol{C} \boldsymbol{x}(k)\\
-        & & & \boldsymbol{x}(0) =
-        \boldsymbol{x}_0\\
-        & & & \underline{\boldsymbol{x}} \leq \boldsymbol{x}(k) \leq \overline{\boldsymbol{x}}\\
-        & & & \underline{\boldsymbol{u}} \leq \boldsymbol{u}(k) \leq \overline{\boldsymbol{u}}
-    \end{aligned}
-\end{equation}$
+  
+
+$$\begin{equation}
+\begin{aligned}
+& \underset{\boldsymbol{U}}{\text{min}} & &
+Q||\boldsymbol{Y} - \boldsymbol{Y}_d||^2 + R||\boldsymbol{U}||^2\\
+& \text{s.t.} & & \boldsymbol{x}(k+1) =
+\boldsymbol{A} \boldsymbol{x}(k) +
+\boldsymbol{B} \boldsymbol{u}(k) \\
+& & & \boldsymbol{y}(k) =
+\boldsymbol{C} \boldsymbol{x}(k)\\
+& & & \boldsymbol{x}(0) =
+\boldsymbol{x}_0\\
+& & & \underline{\boldsymbol{x}} \leq  \boldsymbol{x}(k) \leq  \overline{\boldsymbol{x}}\\
+& & & \underline{\boldsymbol{u}} \leq  \boldsymbol{u}(k) \leq  \overline{\boldsymbol{u}}
+\end{aligned}
+\end{equation}$$
 
 MPC 2:
 
-$\begin{equation}
-	\begin{aligned}
-        & \underset{\boldsymbol{U}}{\text{min}} & & 
-        ||\boldsymbol{Y} - \boldsymbol{Y}_d||^2 + ||\boldsymbol{W}_u\boldsymbol{U}||^2  + ||\boldsymbol{W}_x\boldsymbol{X}||^2\\
-        & \text{s.t.} & &  \boldsymbol{x}(k+1) =
-        \boldsymbol{A} \boldsymbol{x}(k) + 
-        \boldsymbol{B} \boldsymbol{u}(k) \\
-        & & & \boldsymbol{y}(k) =
-        \boldsymbol{C} \boldsymbol{x}(k)\\
-        & & & \boldsymbol{x}(0) =
-        \boldsymbol{x}_0\\
-        & & & \underline{\boldsymbol{x}} \leq \boldsymbol{x}(k) \leq \overline{\boldsymbol{x}}\\
-        & & & \underline{\boldsymbol{u}} \leq \boldsymbol{u}(k) \leq \overline{\boldsymbol{u}}
-    \end{aligned}
-\end{equation}$
+$$\begin{equation}
+\begin{aligned}
+& \underset{\boldsymbol{U}}{\text{min}} & &
+||\boldsymbol{Y} - \boldsymbol{Y}_d||^2 + ||\boldsymbol{W}_u\boldsymbol{U}||^2 + ||\boldsymbol{W}_x\boldsymbol{X}||^2\\
+& \text{s.t.} & & \boldsymbol{x}(k+1) =
+\boldsymbol{A} \boldsymbol{x}(k) +
+\boldsymbol{B} \boldsymbol{u}(k) \\
+& & & \boldsymbol{y}(k) =
+\boldsymbol{C} \boldsymbol{x}(k)\\
+& & & \boldsymbol{x}(0) =
+\boldsymbol{x}_0\\
+& & & \underline{\boldsymbol{x}} \leq  \boldsymbol{x}(k) \leq  \overline{\boldsymbol{x}}\\
+& & & \underline{\boldsymbol{u}} \leq  \boldsymbol{u}(k) \leq  \overline{\boldsymbol{u}}
+\end{aligned}
+\end{equation}$$
 
-System output vector $Y$ is calculated from $U$ via the dynamics equations over the entire horizon:
+System output vector $\boldsymbol{Y}$ is calculated from $\boldsymbol{U}$ via the dynamics equations over the entire horizon:
+
 $$
 \boldsymbol{X} = \boldsymbol{A}_{mpc} \boldsymbol{U} + \boldsymbol{B}_{mpc} \boldsymbol{x}_0
 $$
+
 $$
 \boldsymbol{Y} = \boldsymbol{C}_{mpc} \boldsymbol{X}
 $$
