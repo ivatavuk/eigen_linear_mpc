@@ -22,7 +22,7 @@
 
         - MPC I:
           min  	Q * ||Y - Y_d||^2 + R * ||U||^2
-          U
+           U
             
           s.t.	(implicit constraints)
               x(k+1) =  A * x(k) + B * u(k)
@@ -30,7 +30,7 @@
 
         - MPC II:
           min  	||Y - Y_d||^2 + ||W_u * U||^2 + ||W_x * X||^2
-          U
+           U
             
           s.t. 	(implicit constraints)
               x(k+1) =  A * x(k) + B * u(k)

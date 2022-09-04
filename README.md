@@ -1,7 +1,81 @@
 # Linear MPC library using Eigen and OSQP QP solver
 Linear MPC library using Eigen QSQP solver 
+## 🖥️ Using the library
 
-# TODO
+Easy to use library, using Eigen matrices and vectors:
+
+```cpp
+//Define a discrete linear system 
+// A, B, C, and D are of type Eigen::MatrixXd
+EigenLinearMpc::LinearSystem example_system(A, B, C, D); 
+// Create mpc object
+EigenLinearMpc::MPC mpc(example_system, // Discrete linear system (EigenLinearMpc::LinearSystem)
+                        horizon,        // MPC horizon (uint32_t)
+                        Y_d,            // System output reference (Eigen::VectorXd)
+                        x0,             // Initial system state (Eigen::VectorXd)
+                        Q,              // Q weight value (double)
+                        R);             // R weight value (double)
+
+mpc.initializeSolver();
+// Solve problem
+auto U_sol = mpc.solve();
+```
+
+
+Discrete linear system:
+$$
+	\boldsymbol{x}(k+1) = \boldsymbol{A}\boldsymbol{x}(k) + \boldsymbol{B}\boldsymbol{u}(k)
+$$
+$$
+	\boldsymbol{y}(k) = \boldsymbol{C}\boldsymbol{x}(k)
+$$
+
+MPC 1:
+
+$\begin{equation}
+	\begin{aligned}
+        & \underset{\boldsymbol{U}}{\text{min}} & & 
+        Q||\boldsymbol{Y} - \boldsymbol{Y}_d||^2 + R||\boldsymbol{U}||^2\\
+        & \text{s.t.} & &  \boldsymbol{x}(k+1) =
+        \boldsymbol{A} \boldsymbol{x}(k) + 
+        \boldsymbol{B} \boldsymbol{u}(k) \\
+        & & & \boldsymbol{y}(k) =
+        \boldsymbol{C} \boldsymbol{x}(k)\\
+        & & & \boldsymbol{x}(0) =
+        \boldsymbol{x}_0\\
+        & & & \underline{\boldsymbol{x}} \leq \boldsymbol{x}(k) \leq \overline{\boldsymbol{x}}\\
+        & & & \underline{\boldsymbol{u}} \leq \boldsymbol{u}(k) \leq \overline{\boldsymbol{u}}
+    \end{aligned}
+\end{equation}$
+
+MPC 2:
+
+$\begin{equation}
+	\begin{aligned}
+        & \underset{\boldsymbol{U}}{\text{min}} & & 
+        ||\boldsymbol{Y} - \boldsymbol{Y}_d||^2 + ||\boldsymbol{W}_u\boldsymbol{U}||^2  + ||\boldsymbol{W}_x\boldsymbol{X}||^2\\
+        & \text{s.t.} & &  \boldsymbol{x}(k+1) =
+        \boldsymbol{A} \boldsymbol{x}(k) + 
+        \boldsymbol{B} \boldsymbol{u}(k) \\
+        & & & \boldsymbol{y}(k) =
+        \boldsymbol{C} \boldsymbol{x}(k)\\
+        & & & \boldsymbol{x}(0) =
+        \boldsymbol{x}_0\\
+        & & & \underline{\boldsymbol{x}} \leq \boldsymbol{x}(k) \leq \overline{\boldsymbol{x}}\\
+        & & & \underline{\boldsymbol{u}} \leq \boldsymbol{u}(k) \leq \overline{\boldsymbol{u}}
+    \end{aligned}
+\end{equation}$
+
+System output vector $Y$ is calculated from $U$ via the dynamics equations over the entire horizon:
+$$
+\boldsymbol{X} = \boldsymbol{A}_{mpc} \boldsymbol{U} + \boldsymbol{B}_{mpc} \boldsymbol{x}_0
+$$
+$$
+\boldsymbol{Y} = \boldsymbol{C}_{mpc} \boldsymbol{X}
+$$
+
+## TODO
+### High priority
 - [x] Switch to Osqp
 - [x] Write example
 - [x] Add plotting for example
@@ -11,8 +85,16 @@ Linear MPC library using Eigen QSQP solver
 - [ ] Write more complex example
 - [ ] Remove OsqpEigenOptimization and QpProblem files to different package - larics_qp_common or smth
 - [ ] Sparse matrices!
-- [ ] Add D matrix
 - [ ] Remove ROS - build with cmake
 - [ ] Write nice README
+    - [ ] Write equations
+    - [ ] Write dependencies
+    - [ ] Write usage directions
+    - [ ] Switch equations to pics
 - [ ] Search TODOs in code
 - [ ] Add license info
+
+### Medium priority
+- [ ] Allow continuous systems
+- [ ] Allow using both implicit and explicit dynamics constraints
+- [ ] Add D matrix
