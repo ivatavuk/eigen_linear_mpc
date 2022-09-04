@@ -4,8 +4,6 @@
 MatNd matrixPow(const MatNd &input_mat, uint32_t power) 
 {
   MatNd output_mat = MatNd::Identity(input_mat.rows(), input_mat.cols());
-  if (power == 0) 
-    return output_mat;
 
   for (int i = 0; i < power; i++) 
     output_mat *= input_mat;
