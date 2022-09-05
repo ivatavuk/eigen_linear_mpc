@@ -111,7 +111,6 @@ public:
   VecNd calculateX(const VecNd &U_in) const;
   VecNd calculateY(const VecNd &U_in) const;
 
-  SparseQpProblem getQpProblem() const;
   VecNd solve() const;
 
 private:
@@ -124,7 +123,7 @@ private:
   VecNd Y_d_; //refrence output
   VecNd x0_; //initial state
 
-  SparseQpProblem qp_problem_;
+  std::unique_ptr<SparseQpProblem> qp_problem_;
   double Q_, R_; 
 
   MatNd W_u_, w_u_;

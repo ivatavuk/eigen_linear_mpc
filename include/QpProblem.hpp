@@ -38,7 +38,6 @@ struct DenseQpProblem {
 struct SparseQpProblem {
   SparseMat A_qp, A_eq, A_ieq;
   VecNd b_qp, b_eq, b_ieq;
-  SparseQpProblem() {};
   SparseQpProblem(SparseMat A_qp_in, VecNd b_qp_in, 
                   SparseMat A_eq_in, VecNd b_eq_in,
                   SparseMat A_ieq_in, VecNd b_ieq_in) 

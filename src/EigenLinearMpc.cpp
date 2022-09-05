@@ -226,8 +226,8 @@ void EigenLinearMpc::MPC::setupQpMPC1()
   SparseMat A_ieq(0, N_ * n_u);
   auto b_ieq = VecNd::Zero(0);
 
-  qp_problem_ = SparseQpProblem(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq); //TODO: make_unique
-  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(qp_problem_);
+  qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
+  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
 }
 
 void EigenLinearMpc::MPC::setupQpBoundConstrainedMPC1() 
@@ -244,8 +244,8 @@ void EigenLinearMpc::MPC::setupQpBoundConstrainedMPC1()
   SparseMat A_ieq(0, N_ * n_u);
   VecNd b_ieq = VecNd::Zero(0);
 
-  qp_problem_ = DenseQpProblem(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
-  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(qp_problem_);
+  qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
+  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
 }
 
 void EigenLinearMpc::MPC::setupQpMPC2() 
@@ -270,8 +270,8 @@ void EigenLinearMpc::MPC::setupQpMPC2()
   SparseMat A_ieq(0, N_ * n_u);
   VecNd b_ieq = VecNd::Zero(0);
 
-  qp_problem_ = SparseQpProblem(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
-  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(qp_problem_);
+  qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
+  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
 }
 
 void EigenLinearMpc::MPC::updateQpMatrices2(const VecNd &Y_d_in, const VecNd &x0) 
@@ -284,7 +284,8 @@ void EigenLinearMpc::MPC::updateQpMatrices2(const VecNd &Y_d_in, const VecNd &x0
   VecNd b_qp = (	Q_*(C_B_*x0 - Y_d_).transpose()*C_A_ +
                   (W_x_B_*x0).transpose()*(W_x_A_)
                   ).transpose();
-  qp_problem_.b_qp = b_qp;
+  qp_problem_->b_qp = b_qp;
+  osqp_eigen_opt_->setGradientAndInit(b_qp);
 }
 
 VecNd EigenLinearMpc::MPC::calculateX(const VecNd &U_in) const 
@@ -370,13 +371,7 @@ void EigenLinearMpc::MPC::setWx()
   W_x_ = W_x_temp;
 }
 
-SparseQpProblem EigenLinearMpc::MPC::getQpProblem() const 
-{
-  return qp_problem_;
-}
-
 VecNd EigenLinearMpc::MPC::solve() const 
 {
-  osqp_eigen_opt_->initializeSolver(false);
   return osqp_eigen_opt_->solveProblem();
 } 
