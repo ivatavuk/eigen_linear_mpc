@@ -64,7 +64,7 @@ int main()
     { 
       std::cout << "i = " << i << "\n";
       Y_d = Y_d_full.segment(i, horizon);
-      x0 = mpc.calculateX(U_sol).segment(2, 2);
+      x0 = mpc.calculateX(U_sol).segment(0, 2);
       std::cout << "Updating MPC:\n";
       ChronoCall(microseconds,
         mpc.updateSolver(Y_d, x0);
