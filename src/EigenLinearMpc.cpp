@@ -58,31 +58,31 @@ void EigenLinearMpc::LinearSystem::checkMatrixDimensions() const
   {
     msg << "set_system: Matrix 'A' needs to be a square matrix\n A.dimensions = (" << A.rows() << " x " 
         << A.cols() << ")";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
   if ((int)A.rows() != B.rows()) 
   {
     msg << "set_system: 'A' and 'B' matrices need to have an equal number of rows\n A.rows = " << A.rows() << ", B.rows =  " 
         << B.rows() << ")";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
   if ((int)A.cols() != C.cols()) 
   {
     msg << "set_system: A.cols (" << A.cols() << ") != C.cols (" 
         << C.cols() << ")";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
   if ((int)C.rows() != D.rows()) 
   {
     msg << "set_system: C.rows (" << C.rows() << ") != D.rows (" 
         << D.rows() << ")";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
   if ((int)D.cols() != B.cols()) 
   {
     msg << "set_system: D.cols (" << D.cols() << ") != B.cols (" 
         << B.cols() << ")";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
 }
 
@@ -136,13 +136,13 @@ void EigenLinearMpc::MPC::checkMatrixDimensions() const
   {
     msg << "MPC: Vector 'Y_d' size error\n Y_d_.rows() = " << Y_d_.rows() 
         << ", needs to be = " << N_ * linear_system_.n_y << "\n";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
   if ((int)x0_.rows() != linear_system_.n_x) 
   {
     msg << "MPC: Vector 'x0' size error\n x0.rows() = " << x0_.rows() 
         << ", needs to be = " << linear_system_.n_x << "\n";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
 }
 
@@ -154,25 +154,25 @@ void EigenLinearMpc::MPC::checkBoundsDimensions() const
   {
     msg << "MPC: Vector 'u_lower_bounds_' size error\n lower_bounds_.rows() = " << u_lower_bound_.rows() 
         << ", needs to be = " << linear_system_.n_u << "\n";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
   if ((int)u_upper_bound_.rows() != linear_system_.n_u) 
   {
     msg << "MPC: Vector 'u_upper_bound_' size error\n lower_bounds_.rows() = " << u_upper_bound_.rows() 
         << ", needs to be = " << linear_system_.n_u << "\n";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
   if ((int)x_lower_bound_.rows() != linear_system_.n_x) 
   {
     msg << "MPC: Vector 'x_lower_bound_' size error\n lower_bounds_.rows() = " << x_lower_bound_.rows() 
         << ", needs to be = " << linear_system_.n_x << "\n";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
   if ((int)x_upper_bound_.rows() != linear_system_.n_x) 
   {
     msg << "MPC: Vector 'x_upper_bound_' size error\n lower_bounds_.rows() = " << x_upper_bound_.rows() 
         << ", needs to be = " << linear_system_.n_x << "\n";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
 }
 
@@ -194,7 +194,6 @@ void EigenLinearMpc::MPC::setupMpcDynamics()
         setSparseBlock(A_mpc_, matrixPow(linear_system_.A, i-j) * linear_system_.B, n_x * i, n_u * j);
     }
   }
-  
 }
 
 void EigenLinearMpc::MPC::setYd(const VecNd &Y_d_in) 
@@ -313,13 +312,13 @@ void EigenLinearMpc::MPC::setWu()
   {
     msg << "set_w_u: Input matrix needs to be a square matrix\n mat.dimensions = (" << n_r << " != " 
         << n_c << ")";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
   if ((int)n_r != n_u) 
   {
     msg << "set_w_u: Input matrix needs to have number of rows equal to n_u\n (" << n_r << " != " 
         << n_u << ")";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
 
   MatNd W_u_temp = MatNd::Zero(N_*n_u, N_*n_u);
@@ -348,12 +347,12 @@ void EigenLinearMpc::MPC::setWx()
   if ((int)n_r != n_c) {
     msg << "set_w_x: Input matrix needs to be a square matrix\n mat.dimensions = (" << n_r << " != " 
         << n_c << ")";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
   if ((int)n_r != n_x) {
     msg << "set_w_x: Input matrix needs to have number of rows equal to n_x\n (" << n_r << " != " 
         << n_x << ")";
-    throw std::logic_error(msg.str());
+    throw std::runtime_error(msg.str());
   }
 
   MatNd W_x_temp = MatNd::Zero(N_*n_x, N_*n_x);
