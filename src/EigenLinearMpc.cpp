@@ -1,18 +1,49 @@
 #include "EigenLinearMpc.hpp"
 
+void setSparseBlock(Eigen::SparseMatrix<double> &output_matrix, const Eigen::SparseMatrix<double> &input_block,
+                    uint32_t i, uint32_t j) 
+{
+  if((input_block.rows() > output_matrix.rows() - i) || (input_block.cols() > output_matrix.cols() - j))
+  {
+    std::cout << "input_block.cols() = " << input_block.cols() << "\n";
+    std::cout << "input_block.rows() = " << input_block.rows() << "\n";
+    std::cout << "output_matrix.cols() - i = " << output_matrix.cols() - i << "\n";
+    std::cout << "output_matrix.rows() - j = " << output_matrix.rows() - j << "\n";
+    throw std::runtime_error("setSparseBlock: Can't fit block");
+  }
+  for (int k=0; k < input_block.outerSize(); ++k)
+  {
+    for (Eigen::SparseMatrix<double>::InnerIterator it(input_block,k); it; ++it)
+    {
+      output_matrix.insert(it.row() + i, it.col() + j) = it.value();
+    }
+  }
+}
+
 // returns input_mat^(power)
 MatNd matrixPow(const MatNd &input_mat, uint32_t power) 
 {
   MatNd output_mat = MatNd::Identity(input_mat.rows(), input_mat.cols());
 
   for (int i = 0; i < power; i++) 
-    output_mat *= input_mat;
+    output_mat = output_mat * input_mat;
 
+  return output_mat;
+}
+// returns input_mat^(power)
+SparseMat matrixPow(const SparseMat &input_mat, uint32_t power) 
+{
+  SparseMat output_mat(input_mat.rows(), input_mat.cols());
+  output_mat.setIdentity();
+
+  for (int i = 0; i < power; i++) 
+    output_mat = output_mat * input_mat;
+  
   return output_mat;
 }
 
 // -------------- LinearSystem -----------------
-EigenLinearMpc::LinearSystem::LinearSystem(const MatNd &A, const MatNd &B, const MatNd &C, const MatNd &D) 
+EigenLinearMpc::LinearSystem::LinearSystem(const SparseMat &A, const SparseMat &B, const SparseMat &C, const SparseMat &D) 
   : A(A), B(B), C(C), D(D), n_x(A.cols()), n_u(B.cols()), n_y(C.rows())
 {
   checkMatrixDimensions();
@@ -60,7 +91,10 @@ void EigenLinearMpc::LinearSystem::checkMatrixDimensions() const
 
 EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
                           const VecNd &Y_d, const VecNd &x0, double Q, double R ) 
-: linear_system_(linear_system), N_(horizon), Y_d_(Y_d), Q_(Q), R_(R), x0_(x0)
+: linear_system_(linear_system), N_(horizon), Y_d_(Y_d), Q_(Q), R_(R), x0_(x0),
+  A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
+  B_mpc_(SparseMat(N_ * linear_system_.n_x, linear_system_.n_x)),
+  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x))
 {
   mpc_type_ = MPC1;
   checkMatrixDimensions();
@@ -148,26 +182,23 @@ void EigenLinearMpc::MPC::setupMpcDynamics()
   uint32_t n_u = linear_system_.n_u;
   uint32_t n_y = linear_system_.n_y;
   
-  B_mpc_ = MatNd::Zero(N_ * n_x, n_x);
-  A_mpc_ = MatNd::Zero(N_ * n_x, N_ * n_u);
-  C_mpc_ = MatNd::Zero(N_ * n_y, N_ * n_x);
-
   for (int i = 0; i < N_; i++) 
   {
-    B_mpc_.block(i * n_x, 0, n_x, n_x) = matrixPow(linear_system_.A, i+1);
-    C_mpc_.block( n_y * i, n_x * i, n_y, n_x) = linear_system_.C;
+    setSparseBlock(B_mpc_, linear_system_.A, n_x * i, 0);
+    setSparseBlock(C_mpc_, linear_system_.C, n_y * i, n_x * i);
     for (int j = 0; j <= i; j++) 
     {
       if (i == j) 
-        A_mpc_.block( n_x * i, n_u * j, n_x, n_u) = linear_system_.B;
-
+      {
+        setSparseBlock(A_mpc_, linear_system_.B, n_x * i, n_u * j);
+      }
       else
       {
-        A_mpc_.block( n_x * i, n_u * j, n_x, n_u) = 
-        matrixPow(linear_system_.A, i-j) * linear_system_.B;
+        setSparseBlock(A_mpc_, matrixPow(linear_system_.A, i-j) * linear_system_.B, n_x * i, n_u * j);
       }
     }
   }
+  
 }
 
 void EigenLinearMpc::MPC::setYd(const VecNd &Y_d_in) 

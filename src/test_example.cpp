@@ -1,6 +1,6 @@
 #include "EigenLinearMpc.hpp"
 #include "matplotlibcpp.hpp"
-
+#include "QpProblem.hpp"
 #include "ChronoCall.hpp"
 
 namespace plt = matplotlibcpp;  
@@ -30,8 +30,13 @@ int main()
   C <<  1, 0;
   
   Eigen::MatrixXd D = Eigen::MatrixXd::Zero(1, 1);
+  
+  Eigen::SparseMatrix<double> A_sparse = SparseQpProblem::sparseMatrixFromDense(A);
+  Eigen::SparseMatrix<double> B_sparse = SparseQpProblem::sparseMatrixFromDense(B);
+  Eigen::SparseMatrix<double> C_sparse = SparseQpProblem::sparseMatrixFromDense(C);
+  Eigen::SparseMatrix<double> D_sparse = SparseQpProblem::sparseMatrixFromDense(D);
 
-  EigenLinearMpc::LinearSystem example_system(A, B, C, D);
+  EigenLinearMpc::LinearSystem example_system(A_sparse, B_sparse, C_sparse, D_sparse);
   uint32_t horizon = 200;
   double Q = 10000.0;
   double R = 5.0;
@@ -54,7 +59,7 @@ int main()
   plt::plot(eigen2stdVec(Y_d));
   plt::plot(eigen2stdVec(y));
   plt::show();
-
+  
   return 0;
 }
 

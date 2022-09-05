@@ -66,16 +66,19 @@
 
 typedef Eigen::VectorXd VecNd;
 typedef Eigen::MatrixXd MatNd;
+typedef Eigen::SparseMatrix<double> SparseMat;
 
 //typedef Eigen::SparseMatrix<double> SparseMatNd; todo probat ubrzat koristenjem ovoga!
 
 namespace EigenLinearMpc {
 
 struct LinearSystem {
-  LinearSystem() {};
+  /*
   LinearSystem( const MatNd &A, const MatNd &B, 
                 const MatNd &C, const MatNd &D );
-  ~LinearSystem() {};
+  */
+  LinearSystem( const SparseMat &A, const SparseMat &B, 
+                const SparseMat &C, const SparseMat &D );
 
   //throws an error if the system is ill defined
   void checkMatrixDimensions() const;
@@ -84,7 +87,7 @@ struct LinearSystem {
   uint32_t n_x; // x vector dimension
   uint32_t n_u; // u vector dimension
   uint32_t n_y; // y vector dimension
-  MatNd A, B, C, D;
+  SparseMat A, B, C, D;
 };
 
 class MPC {
@@ -116,7 +119,7 @@ private:
   uint32_t N_; // mpc prediction horizon
   LinearSystem linear_system_; // linear_system
   
-  MatNd A_mpc_, B_mpc_, C_mpc_; // mpc dynamics matrices
+  SparseMat A_mpc_, B_mpc_, C_mpc_; // mpc dynamics matrices
 
   VecNd Y_d_; //refrence output
   VecNd x0_; //initial state
