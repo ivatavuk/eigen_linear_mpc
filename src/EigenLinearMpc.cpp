@@ -87,8 +87,6 @@ void EigenLinearMpc::LinearSystem::checkMatrixDimensions() const
 }
 
 // -------------- MPC -----------------
-
-
 EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
                           const VecNd &Y_d, const VecNd &x0, double Q, double R ) 
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), Q_(Q), R_(R), x0_(x0),
@@ -207,10 +205,20 @@ void EigenLinearMpc::MPC::initializeSolver()
     setupQpMPC1();
   if(mpc_type_ == MPC2)
     setupQpMPC2();
-  if(mpc_type_ == MPC1_BOUND_CONSTRAINED)
-    setupQpBoundConstrainedMPC1();
-  if(mpc_type_ == MPC2_BOUND_CONSTRAINED){}
 }
+
+void EigenLinearMpc::MPC::updateSolver(const VecNd &Y_d_in, const VecNd &x0)
+{
+  if(mpc_type_ == MPC1)
+    updateQpMPC1(Y_d_in, x0);
+  if(mpc_type_ == MPC2)
+    updateQpMPC2(Y_d_in, x0);
+}
+
+VecNd EigenLinearMpc::MPC::solve() const 
+{
+  return osqp_eigen_opt_->solveProblem();
+} 
 
 void EigenLinearMpc::MPC::setupQpMPC1() 
 {
@@ -230,22 +238,17 @@ void EigenLinearMpc::MPC::setupQpMPC1()
   osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
 }
 
-void EigenLinearMpc::MPC::setupQpBoundConstrainedMPC1() 
+void EigenLinearMpc::MPC::updateQpMPC1(const VecNd &Y_d_in, const VecNd &x0) 
 {
-  uint32_t n_u = linear_system_.n_u;
-  C_A_ = C_mpc_*A_mpc_;
-  C_B_ = C_mpc_*B_mpc_;
-
-  SparseMat A_qp = Q_*(C_A_).transpose()*(C_A_) + R_*MatNd::Identity(N_*n_u, N_*n_u);
+  /* 
+    only b_qp vector depends on x0 and Y_d 
+    (vectors that change from step to step of MPC)
+  */
+  Y_d_ = Y_d_in;
   VecNd b_qp = (Q_*(C_B_*x0_ - Y_d_).transpose()*C_A_).transpose();
-  
-  SparseMat A_eq(0, N_ * n_u);
-  VecNd b_eq = VecNd::Zero(0);
-  SparseMat A_ieq(0, N_ * n_u);
-  VecNd b_ieq = VecNd::Zero(0);
 
-  qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
-  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
+  qp_problem_->b_qp = b_qp;
+  osqp_eigen_opt_->setGradientAndInit(b_qp);
 }
 
 void EigenLinearMpc::MPC::setupQpMPC2() 
@@ -274,10 +277,10 @@ void EigenLinearMpc::MPC::setupQpMPC2()
   osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
 }
 
-void EigenLinearMpc::MPC::updateQpMatrices2(const VecNd &Y_d_in, const VecNd &x0) 
+void EigenLinearMpc::MPC::updateQpMPC2(const VecNd &Y_d_in, const VecNd &x0) 
 {
   /* 
-    only b_qp vector of the MPC II QP depends on x0 and Y_d 
+    only b_qp vector depends on x0 and Y_d 
     (vectors that change from step to step of MPC)
   */
   Y_d_ = Y_d_in;
@@ -370,8 +373,3 @@ void EigenLinearMpc::MPC::setWx()
   }
   W_x_ = W_x_temp;
 }
-
-VecNd EigenLinearMpc::MPC::solve() const 
-{
-  return osqp_eigen_opt_->solveProblem();
-} 

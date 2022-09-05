@@ -29,7 +29,7 @@
               y(k) =    C * x(k)
 
         - MPC II:
-          min  	||Y - Y_d||^2 + ||W_u * U||^2 + ||W_x * X||^2
+          min  	Q * ||Y - Y_d||^2 + ||W_u * U||^2 + ||W_x * X||^2
            U
             
           s.t. 	(implicit constraints)
@@ -107,6 +107,7 @@ public:
   void setYd(const VecNd &Y_d_in); // set Y_d from an Eigen vector Nd
 
   void initializeSolver();
+  void updateSolver(const VecNd &Y_d_in, const VecNd &x0);
   
   VecNd calculateX(const VecNd &U_in) const;
   VecNd calculateY(const VecNd &U_in) const;
@@ -152,11 +153,11 @@ private:
   void setupMpcDynamics();
   // MPC1
   void setupQpMPC1(); 
-  void setupQpBoundConstrainedMPC1(); 
+  void updateQpMPC1(const VecNd &Y_d_in, const VecNd &x0);
   // MPC2
-  void setupQpMPC2(); 
-  // THIS IS SLOW!! - speed up using sparse matrices
-  void updateQpMatrices2(const VecNd &Y_d_in, const VecNd &x0); // update qp problem for new Y_d_in and x0
+  void setupQpMPC2();  
+  // update qp problem for new Y_d_in and x0
+  void updateQpMPC2(const VecNd &Y_d_in, const VecNd &x0);
 
   void checkMatrixDimensions() const; 
   void checkBoundsDimensions() const; 
