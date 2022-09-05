@@ -189,13 +189,9 @@ void EigenLinearMpc::MPC::setupMpcDynamics()
     for (int j = 0; j <= i; j++) 
     {
       if (i == j) 
-      {
         setSparseBlock(A_mpc_, linear_system_.B, n_x * i, n_u * j);
-      }
       else
-      {
         setSparseBlock(A_mpc_, matrixPow(linear_system_.A, i-j) * linear_system_.B, n_x * i, n_u * j);
-      }
     }
   }
   
@@ -255,29 +251,19 @@ void EigenLinearMpc::MPC::setupQpBoundConstrainedMPC1()
 
 void EigenLinearMpc::MPC::setupQpMPC2() 
 {
-  // THIS IS SLOW!! - speed up using sparse matrices
   uint32_t n_u = linear_system_.n_u;
-
-  // save temp matrices to reduce redundant computation
-  // save these ones!
+  // save intermediate product matrices to reduce redundant computation
   C_A_ = C_mpc_*A_mpc_;
   C_B_ = C_mpc_*B_mpc_;
   W_x_B_ = W_x_*B_mpc_;
   W_x_A_ = W_x_*A_mpc_;
-  
-  //these are temp - dont need those??
-  MatNd B_x0 = B_mpc_*x0_;
-  MatNd C_B_x0 = C_B_*x0_;
-  MatNd W_x_B_x0 = W_x_B_*x0_;
-  
 
   SparseMat A_qp = 	Q_*(C_A_).transpose()*(C_A_) 
                     + W_u_.transpose()*W_u_ 
                     + (W_x_A_).transpose()*(W_x_A_);
 
-
-  VecNd b_qp = ( Q_*(C_B_x0 - Y_d_).transpose()*C_A_ +
-                 (W_x_B_x0).transpose()*(W_x_A_) 
+  VecNd b_qp = ( Q_*(C_B_*x0_ - Y_d_).transpose()*C_A_ +
+                 (W_x_B_*x0_).transpose()*(W_x_A_) 
                  ).transpose();
 
   SparseMat A_eq(0, N_ * n_u);
