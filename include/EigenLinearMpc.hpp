@@ -149,11 +149,10 @@ private:
   void setupMpcDynamics();
   // MPC1
   void setupQpMPC1(); 
-  void updateQpMPC1(const VecNd &Y_d_in, const VecNd &x0);
+  void updateQpMPC1();
   // MPC2
-  void setupQpMPC2();  
-  // update qp problem for new Y_d_in and x0
-  void updateQpMPC2(const VecNd &Y_d_in, const VecNd &x0);
+  void setupQpMPC2();
+  void updateQpMPC2();
 
   void checkMatrixDimensions() const; 
   void checkBoundsDimensions() const; 

@@ -13,10 +13,10 @@ int main()
 {
 
   // define lawnmower reference
-  uint32_t n_simulate_steps = 10;
+  uint32_t n_simulate_steps = 30;
   uint32_t horizon = 200;
   double Q = 10000.0;
-  double R = 5.0;
+  double R = 3.0;
   Eigen::VectorXd Y_d_full = generate_lawnmower_vec(horizon + n_simulate_steps, 20, 1.0, 0.0);
 
   /**                   Define linear system
@@ -48,43 +48,38 @@ int main()
   Eigen::VectorXd x0 = Eigen::VectorXd::Zero(2);
   x0 << 1, 0;
   
-  auto Y_d = Y_d_full.segment(0, horizon);
+  VecNd Y_d = Y_d_full.segment(0, horizon);
   EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, Q, R);
-  std::cout << "First solver initialization:\n";
-  ChronoCall(
-    mpc.initializeSolver();
-  );
   VecNd U_sol;
-  std::cout << "Solving:\n";
-  ChronoCall(microseconds,
-    U_sol = mpc.solve();
-  );
-
-  plt::plot(eigen2stdVec(Y_d));
-  plt::plot(eigen2stdVec(mpc.calculateY(U_sol)));
-  plt::show();
-
-  auto x = mpc.calculateX(U_sol);
-
-  for(uint32_t i = 1; i < n_simulate_steps; i++)
+  for(uint32_t i = 0; i < n_simulate_steps; i++)
   {
-    Y_d = Y_d_full.segment(i, horizon + i);
-    x0 = mpc.calculateX(U_sol).segment(2, 2);
-    std::cout << "x0 = " << x0 << "\n";
-    std::cout << "Updating MPC:\n";
-    ChronoCall(microseconds,
-      mpc.updateSolver(Y_d, x0);
-    );
+    if(i == 0)
+    {
+      std::cout << "First solver initialization:\n";
+      ChronoCall(microseconds,
+        mpc.initializeSolver();
+      );
+    }
+    else
+    { 
+      std::cout << "i = " << i << "\n";
+      Y_d = Y_d_full.segment(i, horizon);
+      x0 = mpc.calculateX(U_sol).segment(2, 2);
+      std::cout << "Updating MPC:\n";
+      ChronoCall(microseconds,
+        mpc.updateSolver(Y_d, x0);
+      );
+    }
+    
     std::cout << "Solving:\n";
     ChronoCall(microseconds,
       U_sol = mpc.solve();
     );
 
     plt::plot(eigen2stdVec(Y_d));
-    plt::plot(eigen2stdVec(mpc.calculateY(U_sol)));
+    plt::plot(eigen2stdVec(mpc.calculateY(U_sol))); //Y does not show current point!!
     plt::show();
   }
-
   
   return 0;
 }

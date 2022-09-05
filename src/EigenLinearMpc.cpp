@@ -209,10 +209,12 @@ void EigenLinearMpc::MPC::initializeSolver()
 
 void EigenLinearMpc::MPC::updateSolver(const VecNd &Y_d_in, const VecNd &x0)
 {
+  Y_d_ = Y_d_in;
+  x0_ = x0;
   if(mpc_type_ == MPC1)
-    updateQpMPC1(Y_d_in, x0);
+    updateQpMPC1();
   if(mpc_type_ == MPC2)
-    updateQpMPC2(Y_d_in, x0);
+    updateQpMPC2();
 }
 
 VecNd EigenLinearMpc::MPC::solve() const 
@@ -238,13 +240,8 @@ void EigenLinearMpc::MPC::setupQpMPC1()
   osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
 }
 
-void EigenLinearMpc::MPC::updateQpMPC1(const VecNd &Y_d_in, const VecNd &x0) 
+void EigenLinearMpc::MPC::updateQpMPC1() 
 {
-  /* 
-    only b_qp vector depends on x0 and Y_d 
-    (vectors that change from step to step of MPC)
-  */
-  Y_d_ = Y_d_in;
   VecNd b_qp = (Q_*(C_B_*x0_ - Y_d_).transpose()*C_A_).transpose();
 
   qp_problem_->b_qp = b_qp;
@@ -277,15 +274,10 @@ void EigenLinearMpc::MPC::setupQpMPC2()
   osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
 }
 
-void EigenLinearMpc::MPC::updateQpMPC2(const VecNd &Y_d_in, const VecNd &x0) 
+void EigenLinearMpc::MPC::updateQpMPC2() 
 {
-  /* 
-    only b_qp vector depends on x0 and Y_d 
-    (vectors that change from step to step of MPC)
-  */
-  Y_d_ = Y_d_in;
-  VecNd b_qp = (	Q_*(C_B_*x0 - Y_d_).transpose()*C_A_ +
-                  (W_x_B_*x0).transpose()*(W_x_A_)
+  VecNd b_qp = (	Q_*(C_B_*x0_ - Y_d_).transpose()*C_A_ +
+                  (W_x_B_*x0_).transpose()*(W_x_A_)
                   ).transpose();
   qp_problem_->b_qp = b_qp;
   osqp_eigen_opt_->setGradientAndInit(b_qp);
