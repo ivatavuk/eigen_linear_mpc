@@ -91,6 +91,12 @@ class MPC {
 public:
   MPC(const LinearSystem &linear_system, uint32_t horizon, 
       const VecNd &Y_d, const VecNd &x0, double Q, double R); 
+  
+  MPC(const LinearSystem &linear_system, uint32_t horizon, 
+      const VecNd &Y_d, const VecNd &x0, double Q, double R,
+      const VecNd &u_lower_bound, const VecNd &u_upper_bound,
+      const VecNd &x_lower_bound, const VecNd &x_upper_bound);
+
   MPC(const LinearSystem &linear_system, uint32_t horizon, 
       const VecNd &Y_d, const VecNd &x0, const MatNd &w_u, 
       const MatNd &w_x); 
@@ -130,7 +136,9 @@ private:
   enum mpc_type
   {
     MPC1 = 0,
-    MPC2 = 1
+    MPC2 = 1,
+    MPC1_BOUND_CONSTRAINED = 2,
+    MPC2_BOUND_CONSTRAINED = 3
   };
 
   mpc_type mpc_type_;
@@ -141,13 +149,18 @@ private:
   //Sets A_mpc, B_mpc, C_mpc
   void setupMpcDynamics();
   // MPC1
-  void setupQpMatrices1(); 
+  void setupQpMPC1(); 
+  void setupQpBoundConstrainedMPC1(); 
   // MPC2
-  void setupQpMatrices2(); 
+  void setupQpMPC2(); 
   // THIS IS SLOW!! - speed up using sparse matrices
   void updateQpMatrices2(const VecNd &Y_d_in, const VecNd &x0); // update qp problem for new Y_d_in and x0
 
   void checkMatrixDimensions() const; 
+  void checkBoundsDimensions() const; 
+
+  VecNd u_lower_bound_, u_upper_bound_,
+        x_lower_bound_, x_upper_bound_;
 };
 }
 #endif //EIGENLINEARMPC_H_

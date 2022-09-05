@@ -59,7 +59,7 @@ int main()
 }
 
 Eigen::VectorXd generate_lawnmower_vec(	uint32_t len, uint32_t lawnmower_period, 
-                              double lawnmower_max, double lawnmower_min )
+                                        double lawnmower_max, double lawnmower_min )
 {
   Eigen::VectorXd lawnmower_vec(len);
 

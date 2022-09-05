@@ -68,6 +68,20 @@ EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
 }
 
 EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
+                          const VecNd &Y_d, const VecNd &x0, double Q, double R,
+                          const VecNd &u_lower_bound, const VecNd &u_upper_bound,
+                          const VecNd &x_lower_bound, const VecNd &x_upper_bound ) 
+: linear_system_(linear_system), N_(horizon), Y_d_(Y_d), Q_(Q), R_(R), x0_(x0),
+  u_lower_bound_(u_lower_bound), u_upper_bound_(u_upper_bound),
+  x_lower_bound_(x_lower_bound), x_upper_bound_(x_upper_bound)
+{
+  mpc_type_ = MPC1_BOUND_CONSTRAINED;
+  checkBoundsDimensions();
+  checkMatrixDimensions();
+  setupMpcDynamics();
+}
+
+EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
                           const VecNd &Y_d, const VecNd &x0, const MatNd &w_u, 
                           const MatNd &w_x ) 
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), w_u_(w_u), w_x_(w_x)
@@ -98,6 +112,36 @@ void EigenLinearMpc::MPC::checkMatrixDimensions() const
   }
 }
 
+void EigenLinearMpc::MPC::checkBoundsDimensions() const 
+{
+  std::ostringstream msg;
+
+  if ((int)u_lower_bound_.rows() != linear_system_.n_u) 
+  {
+    msg << "MPC: Vector 'u_lower_bounds_' size error\n lower_bounds_.rows() = " << u_lower_bound_.rows() 
+        << ", needs to be = " << linear_system_.n_u << "\n";
+    throw std::logic_error(msg.str());
+  }
+  if ((int)u_upper_bound_.rows() != linear_system_.n_u) 
+  {
+    msg << "MPC: Vector 'u_upper_bound_' size error\n lower_bounds_.rows() = " << u_upper_bound_.rows() 
+        << ", needs to be = " << linear_system_.n_u << "\n";
+    throw std::logic_error(msg.str());
+  }
+  if ((int)x_lower_bound_.rows() != linear_system_.n_x) 
+  {
+    msg << "MPC: Vector 'x_lower_bound_' size error\n lower_bounds_.rows() = " << x_lower_bound_.rows() 
+        << ", needs to be = " << linear_system_.n_x << "\n";
+    throw std::logic_error(msg.str());
+  }
+  if ((int)x_upper_bound_.rows() != linear_system_.n_x) 
+  {
+    msg << "MPC: Vector 'x_upper_bound_' size error\n lower_bounds_.rows() = " << x_upper_bound_.rows() 
+        << ", needs to be = " << linear_system_.n_x << "\n";
+    throw std::logic_error(msg.str());
+  }
+}
+
 void EigenLinearMpc::MPC::setupMpcDynamics() 
 {
   uint32_t n_x = linear_system_.n_x;
@@ -109,29 +153,18 @@ void EigenLinearMpc::MPC::setupMpcDynamics()
   C_mpc_ = MatNd::Zero(N_ * n_y, N_ * n_x);
 
   for (int i = 0; i < N_; i++) 
-    B_mpc_.block(i * n_x, 0, n_x, n_x) = matrixPow(linear_system_.A, i+1);
-  
-  for (int i = 0; i < N_; i++) 
   {
-    for (int j = 0; j < N_; j++) 
+    B_mpc_.block(i * n_x, 0, n_x, n_x) = matrixPow(linear_system_.A, i+1);
+    C_mpc_.block( n_y * i, n_x * i, n_y, n_x) = linear_system_.C;
+    for (int j = 0; j <= i; j++) 
     {
       if (i == j) 
         A_mpc_.block( n_x * i, n_u * j, n_x, n_u) = linear_system_.B;
 
-      if (i > j) 
+      else
       {
         A_mpc_.block( n_x * i, n_u * j, n_x, n_u) = 
         matrixPow(linear_system_.A, i-j) * linear_system_.B;
-      }
-    }
-  }
-  for (int i = 0; i < N_; i++) 
-  {
-    for (int j = 0; j < N_; j++) 
-    {
-      if (i == j) 
-      {
-        C_mpc_.block( n_y * i, n_x * j, n_y, n_x) = linear_system_.C;
       }
     }
   }
@@ -145,12 +178,15 @@ void EigenLinearMpc::MPC::setYd(const VecNd &Y_d_in)
 void EigenLinearMpc::MPC::initializeSolver()
 {
   if(mpc_type_ == MPC1)
-    setupQpMatrices1();
+    setupQpMPC1();
   if(mpc_type_ == MPC2)
-    setupQpMatrices2();
+    setupQpMPC2();
+  if(mpc_type_ == MPC1_BOUND_CONSTRAINED)
+    setupQpBoundConstrainedMPC1();
+  if(mpc_type_ == MPC2_BOUND_CONSTRAINED){}
 }
 
-void EigenLinearMpc::MPC::setupQpMatrices1() 
+void EigenLinearMpc::MPC::setupQpMPC1() 
 {
   uint32_t n_u = linear_system_.n_u;
   C_A_ = C_mpc_*A_mpc_;
@@ -167,7 +203,24 @@ void EigenLinearMpc::MPC::setupQpMatrices1()
   qp_problem_ = DenseQpProblem(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
 }
 
-void EigenLinearMpc::MPC::setupQpMatrices2() 
+void EigenLinearMpc::MPC::setupQpBoundConstrainedMPC1() 
+{
+  uint32_t n_u = linear_system_.n_u;
+  C_A_ = C_mpc_*A_mpc_;
+  C_B_ = C_mpc_*B_mpc_;
+
+  MatNd A_qp = Q_*(C_A_).transpose()*(C_A_) + R_*MatNd::Identity(N_*n_u, N_*n_u);
+  VecNd b_qp = (Q_*(C_B_*x0_ - Y_d_).transpose()*C_A_).transpose();
+  
+  MatNd A_eq = MatNd::Zero(0, N_ * n_u);
+  MatNd b_eq = VecNd::Zero(0);
+  MatNd A_ieq = MatNd::Zero(0, N_ * n_u);
+  MatNd b_ieq = VecNd::Zero(0);
+
+  qp_problem_ = DenseQpProblem(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
+}
+
+void EigenLinearMpc::MPC::setupQpMPC2() 
 {
   // THIS IS SLOW!! - speed up using sparse matrices
   uint32_t n_u = linear_system_.n_u;
