@@ -73,10 +73,6 @@ typedef Eigen::SparseMatrix<double> SparseMat;
 namespace EigenLinearMpc {
 
 struct LinearSystem {
-  /*
-  LinearSystem( const MatNd &A, const MatNd &B, 
-                const MatNd &C, const MatNd &D );
-  */
   LinearSystem( const SparseMat &A, const SparseMat &B, 
                 const SparseMat &C, const SparseMat &D );
 

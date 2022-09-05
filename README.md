@@ -135,6 +135,7 @@ Materials in this repository are distributed under the following license:
 - [ ] Remove OsqpEigenOptimization and QpProblem files to different package - larics_qp_common or smth
 - [x] Sparse matrices!
     - [ ] Sparse vectors?
+    - [ ] Add non sparse constructor for Linear System
 - [ ] Write nice README
     - [ ] Write equations
     - [ ] Write dependencies
