@@ -223,15 +223,16 @@ void EigenLinearMpc::MPC::setupQpMPC1()
   C_A_ = C_mpc_*A_mpc_;
   C_B_ = C_mpc_*B_mpc_;
 
-  MatNd A_qp = Q_*(C_A_).transpose()*(C_A_) + R_*MatNd::Identity(N_*n_u, N_*n_u);
+  SparseMat A_qp = Q_*(C_A_).transpose()*(C_A_) + R_*MatNd::Identity(N_*n_u, N_*n_u);
   VecNd b_qp = (Q_*(C_B_*x0_ - Y_d_).transpose()*C_A_).transpose();
   
-  MatNd A_eq = MatNd::Zero(0, N_ * n_u);
-  MatNd b_eq = VecNd::Zero(0);
-  MatNd A_ieq = MatNd::Zero(0, N_ * n_u);
-  MatNd b_ieq = VecNd::Zero(0);
+  SparseMat A_eq(0, N_ * n_u);
+  auto b_eq = VecNd::Zero(0);
+  SparseMat A_ieq(0, N_ * n_u);
+  auto b_ieq = VecNd::Zero(0);
 
-  qp_problem_ = DenseQpProblem(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
+  qp_problem_ = SparseQpProblem(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq); //TODO: make_unique
+  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(qp_problem_);
 }
 
 void EigenLinearMpc::MPC::setupQpBoundConstrainedMPC1() 
@@ -240,15 +241,16 @@ void EigenLinearMpc::MPC::setupQpBoundConstrainedMPC1()
   C_A_ = C_mpc_*A_mpc_;
   C_B_ = C_mpc_*B_mpc_;
 
-  MatNd A_qp = Q_*(C_A_).transpose()*(C_A_) + R_*MatNd::Identity(N_*n_u, N_*n_u);
+  SparseMat A_qp = Q_*(C_A_).transpose()*(C_A_) + R_*MatNd::Identity(N_*n_u, N_*n_u);
   VecNd b_qp = (Q_*(C_B_*x0_ - Y_d_).transpose()*C_A_).transpose();
   
-  MatNd A_eq = MatNd::Zero(0, N_ * n_u);
-  MatNd b_eq = VecNd::Zero(0);
-  MatNd A_ieq = MatNd::Zero(0, N_ * n_u);
-  MatNd b_ieq = VecNd::Zero(0);
+  SparseMat A_eq(0, N_ * n_u);
+  VecNd b_eq = VecNd::Zero(0);
+  SparseMat A_ieq(0, N_ * n_u);
+  VecNd b_ieq = VecNd::Zero(0);
 
   qp_problem_ = DenseQpProblem(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
+  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(qp_problem_);
 }
 
 void EigenLinearMpc::MPC::setupQpMPC2() 
@@ -269,21 +271,22 @@ void EigenLinearMpc::MPC::setupQpMPC2()
   MatNd W_x_B_x0 = W_x_B_*x0_;
   
 
-  MatNd A_qp = 	Q_*(C_A_).transpose()*(C_A_) 
-                + W_u_.transpose()*W_u_ 
-                + (W_x_A_).transpose()*(W_x_A_);
+  SparseMat A_qp = 	Q_*(C_A_).transpose()*(C_A_) 
+                    + W_u_.transpose()*W_u_ 
+                    + (W_x_A_).transpose()*(W_x_A_);
 
 
   VecNd b_qp = ( Q_*(C_B_x0 - Y_d_).transpose()*C_A_ +
                  (W_x_B_x0).transpose()*(W_x_A_) 
                  ).transpose();
 
-  MatNd A_eq = MatNd::Zero(0, N_ * n_u);
-  MatNd b_eq = VecNd::Zero(0);
-  MatNd A_ieq = MatNd::Zero(0, N_ * n_u);
-  MatNd b_ieq = VecNd::Zero(0);
+  SparseMat A_eq(0, N_ * n_u);
+  VecNd b_eq = VecNd::Zero(0);
+  SparseMat A_ieq(0, N_ * n_u);
+  VecNd b_ieq = VecNd::Zero(0);
 
-  qp_problem_ = DenseQpProblem(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
+  qp_problem_ = SparseQpProblem(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
+  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(qp_problem_);
 }
 
 void EigenLinearMpc::MPC::updateQpMatrices2(const VecNd &Y_d_in, const VecNd &x0) 
@@ -382,16 +385,13 @@ void EigenLinearMpc::MPC::setWx()
   W_x_ = W_x_temp;
 }
 
-DenseQpProblem EigenLinearMpc::MPC::getQpProblem() const 
+SparseQpProblem EigenLinearMpc::MPC::getQpProblem() const 
 {
   return qp_problem_;
 }
 
 VecNd EigenLinearMpc::MPC::solve() const 
 {
-  OsqpEigenOpt osqp_eigen_opt; //TODO how to handle making a solver??..
-  osqp_eigen_opt.setupQP(qp_problem_);
-
-  osqp_eigen_opt.initializeSolver(false);
-  return osqp_eigen_opt.solveProblem();
+  osqp_eigen_opt_->initializeSolver(false);
+  return osqp_eigen_opt_->solveProblem();
 } 

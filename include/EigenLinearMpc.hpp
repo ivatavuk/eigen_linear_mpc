@@ -111,7 +111,7 @@ public:
   VecNd calculateX(const VecNd &U_in) const;
   VecNd calculateY(const VecNd &U_in) const;
 
-  DenseQpProblem getQpProblem() const;
+  SparseQpProblem getQpProblem() const;
   VecNd solve() const;
 
 private:
@@ -124,15 +124,15 @@ private:
   VecNd Y_d_; //refrence output
   VecNd x0_; //initial state
 
-  DenseQpProblem qp_problem_;
+  SparseQpProblem qp_problem_;
   double Q_, R_; 
 
   MatNd W_u_, w_u_;
   MatNd W_x_, w_x_;
 
   // matrices saved for faster QP problem update
-  MatNd C_A_; // C_mpc * A_mpc
-  MatNd C_B_; // C_mpc * B_mpc
+  SparseMat C_A_; // C_mpc * A_mpc
+  SparseMat C_B_; // C_mpc * B_mpc
   MatNd W_x_A_; // W_x * A_mpc
   MatNd W_x_B_; // W_x * B_mpc
 
@@ -164,6 +164,8 @@ private:
 
   VecNd u_lower_bound_, u_upper_bound_,
         x_lower_bound_, x_upper_bound_;
+
+  std::unique_ptr<OsqpEigenOpt> osqp_eigen_opt_;
 };
 }
 #endif //EIGENLINEARMPC_H_

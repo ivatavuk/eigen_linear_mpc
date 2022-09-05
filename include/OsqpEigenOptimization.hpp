@@ -28,24 +28,19 @@ using MatNd = Eigen::MatrixXd;
 class OsqpEigenOpt 
 {    
 public:
-  OsqpEigenOpt();
-  OsqpEigenOpt(double alpha);
-  OsqpEigenOpt(	const DenseQpProblem &dense_qp_problem, 
-                  bool verbosity = false );
-  ~OsqpEigenOpt();
+  OsqpEigenOpt(	const SparseQpProblem &sparse_qp_problem, 
+                bool verbosity = false );
 
   void initializeSolver(bool verbosity );
+  
   VecNd solveProblem();
-
-  void setupQP( const DenseQpProblem &qp_problem ); 
 
   bool checkFeasibility(); 
 
 private:
   OsqpEigen::Solver solver_;
 
-  DenseQpProblem qp_problem_;
-  SparseQpProblem sparse_qp_problem_;
+  SparseQpProblem qp_problem_;
 
   double alpha_;
 

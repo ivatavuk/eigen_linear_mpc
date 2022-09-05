@@ -21,12 +21,12 @@
 
 using VecNd = Eigen::VectorXd;
 using MatNd = Eigen::MatrixXd;
+using SparseMat = Eigen::SparseMatrix<double>;
 
 //QP description
 struct DenseQpProblem {
   MatNd A_qp, A_eq, A_ieq;
   VecNd b_qp, b_eq, b_ieq;
-  DenseQpProblem() {};
   DenseQpProblem(	MatNd A_qp_in, VecNd b_qp_in, 
                   MatNd A_eq_in, VecNd b_eq_in,
                   MatNd A_ieq_in, VecNd b_ieq_in)
@@ -36,9 +36,16 @@ struct DenseQpProblem {
 };
 
 struct SparseQpProblem {
-  Eigen::SparseMatrix<double> A_qp, A_eq, A_ieq;
+  SparseMat A_qp, A_eq, A_ieq;
   VecNd b_qp, b_eq, b_ieq;
   SparseQpProblem() {};
+  SparseQpProblem(SparseMat A_qp_in, VecNd b_qp_in, 
+                  SparseMat A_eq_in, VecNd b_eq_in,
+                  SparseMat A_ieq_in, VecNd b_ieq_in) 
+    : A_qp(A_qp_in), b_qp(b_qp_in), 
+      A_eq(A_eq_in), b_eq(b_eq_in),
+      A_ieq(A_ieq_in), b_ieq(b_ieq_in) {};
+
   SparseQpProblem(DenseQpProblem dense_qp_prob) 
   {
     A_qp = sparseMatrixFromDense(dense_qp_prob.A_qp);
@@ -50,9 +57,9 @@ struct SparseQpProblem {
     b_ieq = dense_qp_prob.b_ieq;
   };
 
-  static Eigen::SparseMatrix<double> sparseMatrixFromDense(const MatNd &matrix) //TODO: does Eigen support something like this?
+  static SparseMat sparseMatrixFromDense(const MatNd &matrix) //TODO: does Eigen support something like this?
   {
-    Eigen::SparseMatrix<double> sparse_matrix(matrix.rows(), matrix.cols());
+    SparseMat sparse_matrix(matrix.rows(), matrix.cols());
     for(uint32_t j = 0; j < matrix.cols(); j++)
     {
       for(uint32_t i = 0; i < matrix.rows(); i++)

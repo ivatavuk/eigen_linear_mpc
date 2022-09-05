@@ -7,28 +7,14 @@
 
 #include "OsqpEigenOptimization.hpp"
 
-OsqpEigenOpt::OsqpEigenOpt() : alpha_(1.0)
-{}
-
-OsqpEigenOpt::OsqpEigenOpt( const DenseQpProblem &dense_qp_problem, 
-                            bool verbosity ) : alpha_(1.0)
+OsqpEigenOpt::OsqpEigenOpt( const SparseQpProblem &qp_problem, 
+                            bool verbosity ) 
+  : alpha_(1.0), qp_problem_(qp_problem), 
+  n_(qp_problem.A_qp.rows()), 
+  m_(qp_problem.A_eq.rows() + qp_problem.A_ieq.rows())
 {
-  setupQP(dense_qp_problem);
   initializeSolver(verbosity);
 }
-
-OsqpEigenOpt::~OsqpEigenOpt() {}
-
-void OsqpEigenOpt::setupQP( const DenseQpProblem &dense_qp_problem ) 
-{
-  qp_problem_ = dense_qp_problem;
-
-  n_ = dense_qp_problem.A_qp.rows();
-  m_ = dense_qp_problem.A_eq.rows() + dense_qp_problem.A_ieq.rows();
-
-  sparse_qp_problem_ = SparseQpProblem(dense_qp_problem);
-}
-
 
 void OsqpEigenOpt::initializeSolver(bool verbosity) 
 {
@@ -41,17 +27,17 @@ void OsqpEigenOpt::initializeSolver(bool verbosity)
   solver_.data()->setNumberOfConstraints(m_);
 
   solver_.data()->clearHessianMatrix();
-  solver_.data()->setHessianMatrix(sparse_qp_problem_.A_qp);
-  solver_.data()->setGradient(sparse_qp_problem_.b_qp);
+  solver_.data()->setHessianMatrix(qp_problem_.A_qp);
+  solver_.data()->setGradient(qp_problem_.b_qp);
 
   solver_.data()->clearLinearConstraintsMatrix();
-  solver_.data()->setLinearConstraintsMatrix(sparse_qp_problem_.A_ieq);
+  solver_.data()->setLinearConstraintsMatrix(qp_problem_.A_ieq);
 
-  VecNd lower_bound_eq = -sparse_qp_problem_.b_eq;
-  VecNd upper_bound_eq = -sparse_qp_problem_.b_eq;
+  VecNd lower_bound_eq = -qp_problem_.b_eq;
+  VecNd upper_bound_eq = -qp_problem_.b_eq;
 
-  VecNd lower_bound_ieq = -inf * VecNd::Ones(sparse_qp_problem_.b_ieq.size());
-  VecNd upper_bound_ieq = -sparse_qp_problem_.b_ieq;
+  VecNd lower_bound_ieq = -inf * VecNd::Ones(qp_problem_.b_ieq.size());
+  VecNd upper_bound_ieq = -qp_problem_.b_ieq;
 
   VecNd lower_bound(lower_bound_eq.size() + lower_bound_ieq.size());
   VecNd upper_bound(upper_bound_eq.size() + upper_bound_ieq.size());
