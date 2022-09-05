@@ -182,7 +182,7 @@ void EigenLinearMpc::MPC::setupMpcDynamics()
   
   for (int i = 0; i < N_; i++) 
   {
-    setSparseBlock(B_mpc_, linear_system_.A, n_x * i, 0);
+    setSparseBlock(B_mpc_, matrixPow(linear_system_.A, i+1), n_x * i, 0);
     setSparseBlock(C_mpc_, linear_system_.C, n_y * i, n_x * i);
     for (int j = 0; j <= i; j++) 
     {
