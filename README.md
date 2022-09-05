@@ -127,21 +127,22 @@ Materials in this repository are distributed under the following license:
 - [x] Add plotting for example
 - [x] Add better constructor, enum type of mpc
 - [x] Add better constructor type 2
-- [ ] Throw errors for all wrong dimensions
+- [x] Throw errors for all wrong dimensions
     - [x] Y_d and x0
-    - [ ] w_u, w_y
+    - [x] w_u, w_y
 - [ ] Add constraints
 - [ ] Write more complex example
 - [ ] Remove OsqpEigenOptimization and QpProblem files to different package - larics_qp_common or smth
-- [ ] Sparse matrices!
-- [ ] Remove ROS - build with cmake
+- [x] Sparse matrices!
+    - [ ] Sparse vectors?
 - [ ] Write nice README
     - [ ] Write equations
     - [ ] Write dependencies
     - [ ] Write usage directions
     - [ ] Switch equations to pics
-- [ ] Search TODOs in code
 - [x] Add license info
+- [ ] Search TODOs in code
+- [ ] Remove ROS - build with cmake
 
 ### Medium priority
 - [ ] Allow continuous systems
