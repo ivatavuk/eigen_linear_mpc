@@ -26,7 +26,7 @@ using SparseMat = Eigen::SparseMatrix<double>;
 //QP description
 struct DenseQpProblem {
   MatNd A_qp, A_eq, A_ieq;
-  VecNd b_qp, b_eq, b_ieq;
+  VecNd b_qp, b_eq, b_ieq, upper_bound, lower_bound;
   DenseQpProblem(	MatNd A_qp_in, VecNd b_qp_in, 
                   MatNd A_eq_in, VecNd b_eq_in,
                   MatNd A_ieq_in, VecNd b_ieq_in)
@@ -37,13 +37,25 @@ struct DenseQpProblem {
 
 struct SparseQpProblem {
   SparseMat A_qp, A_eq, A_ieq;
-  VecNd b_qp, b_eq, b_ieq;
+  VecNd b_qp, b_eq, b_ieq, upper_bound, lower_bound;
   SparseQpProblem(SparseMat A_qp_in, VecNd b_qp_in, 
                   SparseMat A_eq_in, VecNd b_eq_in,
                   SparseMat A_ieq_in, VecNd b_ieq_in) 
     : A_qp(A_qp_in), b_qp(b_qp_in), 
       A_eq(A_eq_in), b_eq(b_eq_in),
       A_ieq(A_ieq_in), b_ieq(b_ieq_in) {};
+  SparseQpProblem(SparseMat A_qp_in, VecNd b_qp_in, 
+                  SparseMat A_eq_in, VecNd b_eq_in,
+                  SparseMat A_ieq_in, VecNd b_ieq_in,
+                  VecNd lower_bound_in, VecNd upper_bound_in) 
+    : A_qp(A_qp_in), b_qp(b_qp_in), 
+      A_eq(A_eq_in), b_eq(b_eq_in),
+      A_ieq(A_ieq_in), b_ieq(b_ieq_in),
+      lower_bound(lower_bound_in),
+      upper_bound(upper_bound_in) 
+      {
+        //TODO check dimensions??
+      };
 
   SparseQpProblem(DenseQpProblem dense_qp_prob) 
   {

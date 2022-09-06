@@ -42,6 +42,22 @@ SparseMat matrixPow(const SparseMat &input_mat, uint32_t power)
   return output_mat;
 }
 
+SparseMat cocatenateMatrices(SparseMat mat_upper, SparseMat mat_lower)
+{
+  SparseMat M(mat_upper.rows() + mat_lower.rows(), mat_lower.cols());
+  M.reserve(mat_upper.nonZeros() + mat_lower.nonZeros());
+  for(Eigen::Index i = 0; i < mat_upper.cols(); i++)
+  {
+      M.startVec(i); // Important: Must be called once for each column before inserting!
+      for(SparseMat::InnerIterator itUpper(mat_upper, i); itUpper; ++itUpper)
+          M.insertBack(itUpper.row(), i) = itUpper.value();
+      for(SparseMat::InnerIterator itLower(mat_lower, i); itLower; ++itLower)
+          M.insertBack(itLower.row() + mat_upper.rows(), i) = itLower.value();
+  }
+  M.finalize();
+  return M;
+}
+
 // -------------- LinearSystem -----------------
 EigenLinearMpc::LinearSystem::LinearSystem(const SparseMat &A, const SparseMat &B, const SparseMat &C, const SparseMat &D) 
   : A(A), B(B), C(C), D(D), n_x(A.cols()), n_u(B.cols()), n_y(C.rows())
@@ -101,11 +117,12 @@ EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
 
 EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
                           const VecNd &Y_d, const VecNd &x0, double Q, double R,
-                          const VecNd &u_lower_bound, const VecNd &u_upper_bound,
-                          const VecNd &x_lower_bound, const VecNd &x_upper_bound ) 
+                          const VecNd &u_lower_bound, const VecNd &u_upper_bound ) 
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), Q_(Q), R_(R), x0_(x0),
   u_lower_bound_(u_lower_bound), u_upper_bound_(u_upper_bound),
-  x_lower_bound_(x_lower_bound), x_upper_bound_(x_upper_bound)
+  A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
+  B_mpc_(SparseMat(N_ * linear_system_.n_x, linear_system_.n_x)),
+  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x))
 {
   mpc_type_ = MPC1_BOUND_CONSTRAINED;
   checkBoundsDimensions();
@@ -160,6 +177,7 @@ void EigenLinearMpc::MPC::checkBoundsDimensions() const
         << ", needs to be = " << linear_system_.n_u << "\n";
     throw std::runtime_error(msg.str());
   }
+  /*
   if ((int)x_lower_bound_.rows() != linear_system_.n_x) 
   {
     msg << "MPC: Vector 'x_lower_bound_' size error\n lower_bounds_.rows() = " << x_lower_bound_.rows() 
@@ -172,6 +190,7 @@ void EigenLinearMpc::MPC::checkBoundsDimensions() const
         << ", needs to be = " << linear_system_.n_x << "\n";
     throw std::runtime_error(msg.str());
   }
+  */
 }
 
 void EigenLinearMpc::MPC::setupMpcDynamics() 
@@ -205,15 +224,19 @@ void EigenLinearMpc::MPC::initializeSolver()
     setupQpMPC1();
   if(mpc_type_ == MPC2)
     setupQpMPC2();
+  if(mpc_type_ == MPC1_BOUND_CONSTRAINED)
+  {
+    setupQpConstrainedMPC1();
+  }
 }
 
 void EigenLinearMpc::MPC::updateSolver(const VecNd &Y_d_in, const VecNd &x0)
 {
   Y_d_ = Y_d_in;
   x0_ = x0;
-  if(mpc_type_ == MPC1)
+  if(mpc_type_ == MPC1 || mpc_type_ == MPC1_BOUND_CONSTRAINED)
     updateQpMPC1();
-  if(mpc_type_ == MPC2)
+  if(mpc_type_ == MPC2 || mpc_type_ == MPC2_BOUND_CONSTRAINED)
     updateQpMPC2();
 }
 
@@ -248,6 +271,32 @@ void EigenLinearMpc::MPC::updateQpMPC1()
 
   //qp_problem_->b_qp = b_qp;
   osqp_eigen_opt_->setGradientAndInit(b_qp);
+}
+
+void EigenLinearMpc::MPC::setupQpConstrainedMPC1() 
+{
+  uint32_t n_u = linear_system_.n_u;
+  C_A_ = C_mpc_*A_mpc_;
+  C_B_ = C_mpc_*B_mpc_;
+  Q_C_A_T_ = Q_*(C_A_).transpose();
+  Q_C_A_T_C_B_ = Q_*(C_A_).transpose()*(C_B_);
+
+  SparseMat A_qp = Q_*(C_A_).transpose()*(C_A_) + R_*MatNd::Identity(N_*n_u, N_*n_u); //Sparse identity
+  VecNd b_qp = Q_C_A_T_C_B_ * x0_ - Q_C_A_T_*Y_d_;
+
+  SparseMat A_eq(0, N_ * n_u);
+  VecNd b_eq = VecNd::Zero(0);
+  SparseMat A_ieq(0, N_ * n_u);
+  VecNd b_ieq = VecNd::Zero(0);
+  std::cout << "tu smo!\n";
+  qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq, 
+                                                  u_lower_bound_.colwise().replicate(N_), 
+                                                  u_upper_bound_.colwise().replicate(N_));
+  
+  std::cout << "tu smo!\n";
+  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
+
+  std::cout << "tu smo!\n";
 }
 
 void EigenLinearMpc::MPC::setupQpMPC2() 

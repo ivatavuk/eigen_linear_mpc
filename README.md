@@ -136,6 +136,8 @@ Materials in this repository are distributed under the following license:
 - [x] Sparse matrices!
     - [ ] Sparse vectors?
     - [ ] Add non sparse constructor for Linear System
+    - [ ] Checkout sparse matrix triplets
+    - [ ] Your sparse matrix class...
 - [ ] Write nice README
     - [ ] Write equations
     - [ ] Write dependencies

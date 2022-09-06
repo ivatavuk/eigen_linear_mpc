@@ -45,11 +45,17 @@ int main()
                                               SparseQpProblem::sparseMatrixFromDense(D));
 
   
-  Eigen::VectorXd x0 = Eigen::VectorXd::Zero(2);
+  Eigen::VectorXd x0(2);
   x0 << 1, 0;
   
   VecNd Y_d = Y_d_full.segment(0, horizon);
-  EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, Q, R);
+
+  VecNd u_lower_bound(1);
+  u_lower_bound << -0.5;
+  VecNd u_upper_bound(1);
+  u_upper_bound << 0.5;
+
+  EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, Q, R, u_lower_bound, u_upper_bound);
   VecNd U_sol;
   for(uint32_t i = 0; i < n_simulate_steps; i++)
   {
@@ -75,6 +81,8 @@ int main()
     ChronoCall(microseconds,
       U_sol = mpc.solve();
     );
+    plt::plot(eigen2stdVec(U_sol));
+    plt::show();
 
     plt::plot(eigen2stdVec(Y_d));
     plt::plot(eigen2stdVec(mpc.calculateY(U_sol))); //Y does not show current point!!

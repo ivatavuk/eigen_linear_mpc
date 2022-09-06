@@ -93,8 +93,7 @@ public:
   
   MPC(const LinearSystem &linear_system, uint32_t horizon, 
       const VecNd &Y_d, const VecNd &x0, double Q, double R,
-      const VecNd &u_lower_bound, const VecNd &u_upper_bound,
-      const VecNd &x_lower_bound, const VecNd &x_upper_bound);
+      const VecNd &u_lower_bound, const VecNd &u_upper_bound);
 
   MPC(const LinearSystem &linear_system, uint32_t horizon, 
       const VecNd &Y_d, const VecNd &x0, const MatNd &w_u, 
@@ -157,6 +156,8 @@ private:
   // MPC2
   void setupQpMPC2();
   void updateQpMPC2();
+  // MPC1
+  void setupQpConstrainedMPC1(); 
 
   void checkMatrixDimensions() const; 
   void checkBoundsDimensions() const; 

@@ -50,6 +50,8 @@ private:
   uint32_t m_; //number of constraints
 
   double inf = 1e100;
+
+  VecNd lower_bound_, upper_bound_;
 };
 
 #endif //OSQP_EIGEN_OPTIMIZATION_HPP_
