@@ -57,7 +57,7 @@ void OsqpEigenOpt::initializeSolver(const SparseQpProblem &qp_problem,
   solver_.initSolver();
 }
 
-void OsqpEigenOpt::setGradientAndInit( VecNd b_qp ) 
+void OsqpEigenOpt::setGradientAndInit(VecNd &b_qp ) 
 {
   solver_.data()->setGradient(b_qp);
   solver_.clearSolver();

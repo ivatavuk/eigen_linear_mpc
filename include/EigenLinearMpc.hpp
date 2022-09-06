@@ -129,6 +129,10 @@ private:
   // matrices saved for faster QP problem update
   SparseMat C_A_; // C_mpc * A_mpc
   SparseMat C_B_; // C_mpc * B_mpc
+  
+  SparseMat Q_C_A_T_;
+  SparseMat Q_C_A_T_C_B_;
+  
   MatNd W_x_A_; // W_x * A_mpc
   MatNd W_x_B_; // W_x * B_mpc
 

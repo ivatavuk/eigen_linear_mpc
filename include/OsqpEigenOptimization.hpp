@@ -35,7 +35,7 @@ public:
   void initializeSolver(const SparseQpProblem &sparse_qp_problem, 
                         bool verbosity );
 
-  void setGradientAndInit(VecNd b_qp); 
+  void setGradientAndInit(VecNd &b_qp); 
 
   VecNd solveProblem();
 

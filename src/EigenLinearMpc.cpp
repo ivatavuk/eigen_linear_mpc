@@ -227,14 +227,16 @@ void EigenLinearMpc::MPC::setupQpMPC1()
   uint32_t n_u = linear_system_.n_u;
   C_A_ = C_mpc_*A_mpc_;
   C_B_ = C_mpc_*B_mpc_;
+  Q_C_A_T_ = Q_*(C_A_).transpose();
+  Q_C_A_T_C_B_ = Q_*(C_A_).transpose()*(C_B_);
 
-  SparseMat A_qp = Q_*(C_A_).transpose()*(C_A_) + R_*MatNd::Identity(N_*n_u, N_*n_u);
-  VecNd b_qp = (Q_*(C_B_*x0_ - Y_d_).transpose()*C_A_).transpose();
-  
+  SparseMat A_qp = Q_*(C_A_).transpose()*(C_A_) + R_*MatNd::Identity(N_*n_u, N_*n_u); //Sparse identity
+  VecNd b_qp = Q_C_A_T_C_B_ * x0_ - Q_C_A_T_*Y_d_;
+
   SparseMat A_eq(0, N_ * n_u);
-  auto b_eq = VecNd::Zero(0);
+  VecNd b_eq = VecNd::Zero(0);
   SparseMat A_ieq(0, N_ * n_u);
-  auto b_ieq = VecNd::Zero(0);
+  VecNd b_ieq = VecNd::Zero(0);
 
   qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
   osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
@@ -242,9 +244,9 @@ void EigenLinearMpc::MPC::setupQpMPC1()
 
 void EigenLinearMpc::MPC::updateQpMPC1() 
 {
-  VecNd b_qp = (Q_*(C_B_*x0_ - Y_d_).transpose()*C_A_).transpose();
+  VecNd b_qp = Q_C_A_T_C_B_ * x0_ - Q_C_A_T_*Y_d_;
 
-  qp_problem_->b_qp = b_qp;
+  //qp_problem_->b_qp = b_qp;
   osqp_eigen_opt_->setGradientAndInit(b_qp);
 }
 
