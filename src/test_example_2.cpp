@@ -13,7 +13,7 @@ int main()
 
   // define lawnmower reference
   uint32_t n_simulate_steps = 30;
-  uint32_t horizon = 100;
+  uint32_t horizon = 40;
   double Q = 10000.0;
   double R = 1.0;
   Eigen::VectorXd Y_d_full = generate_ramp_vec(horizon + n_simulate_steps, 20, 0.1);
@@ -85,12 +85,11 @@ int main()
       U_sol = mpc.solve();
     );
 
-    auto extracted_U = mpc.extractU(U_sol);
-    for(auto curr_U : extracted_U)
+    for(auto curr_U : mpc.extractU(U_sol))
     {
       plt::plot(curr_U);
-      plt::show();
     }
+    plt::show();
 
     plt::plot(eigen2stdVec(Y_d));
     plt::plot(eigen2stdVec(mpc.calculateY(U_sol))); //Y does not show current point!!
