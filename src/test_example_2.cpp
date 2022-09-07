@@ -5,8 +5,7 @@
 
 namespace plt = matplotlibcpp;  
 
-Eigen::VectorXd generate_ramp_vec(	uint32_t len, uint32_t lawnmower_period, 
-                                        double lawnmower_max, double lawnmower_min );
+Eigen::VectorXd generate_ramp_vec(	uint32_t len, uint32_t ramp_half_period, double ramp_rate );
 std::vector<double> eigen2stdVec(	Eigen::VectorXd eigen_vec );
 
 int main()
@@ -14,10 +13,10 @@ int main()
 
   // define lawnmower reference
   uint32_t n_simulate_steps = 30;
-  uint32_t horizon = 40;
+  uint32_t horizon = 100;
   double Q = 10000.0;
   double R = 1.0;
-  Eigen::VectorXd Y_d_full = generate_ramp_vec(horizon + n_simulate_steps, 20, 1.0, 0.0);
+  Eigen::VectorXd Y_d_full = generate_ramp_vec(horizon + n_simulate_steps, 20, 0.1);
 
   /**                   Define linear system
    * x = [px, dpx]^T
@@ -26,18 +25,22 @@ int main()
    * y = [px]^T
    */
   double T = 0.05;
-  Eigen::MatrixXd A(2, 2);
-  A <<  1, T,
-        0, 1;
+  Eigen::MatrixXd A(4, 4);
+  A <<  1, 0, T, 0,
+        0, 1, 0, T,
+        0, 0, 1, 0,
+        0, 0, 0, 1;
 
-  Eigen::MatrixXd B(2, 1);
-  B <<  T*T/2.0,
-        T;
+  Eigen::MatrixXd B(4, 2);
+  B <<  T*T/2.0,  0,
+        0,        T*T/2.0,
+        T,        0,
+        0,        T;
 
-  Eigen::MatrixXd C(1, 2);
-  C <<  1, 0;
+  Eigen::MatrixXd C(1, 4);
+  C <<  1, 1, 0, 0;
   
-  Eigen::MatrixXd D = Eigen::MatrixXd::Zero(1, 1);
+  Eigen::MatrixXd D = Eigen::MatrixXd::Zero(1, 2);
 
   EigenLinearMpc::LinearSystem example_system(SparseQpProblem::sparseMatrixFromDense(A), 
                                               SparseQpProblem::sparseMatrixFromDense(B), 
@@ -45,8 +48,8 @@ int main()
                                               SparseQpProblem::sparseMatrixFromDense(D));
 
   
-  Eigen::VectorXd x0(2);
-  x0 << 1, 0;
+  Eigen::VectorXd x0(4);
+  x0 << 0, 0, 0, 0;
   
   VecNd Y_d = Y_d_full.segment(0, horizon);
 
@@ -55,7 +58,7 @@ int main()
   VecNd u_upper_bound(1);
   u_upper_bound << 7;
 
-  EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, Q, R, u_lower_bound, u_upper_bound);
+  EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, Q, R);
   VecNd U_sol;
   for(uint32_t i = 0; i < n_simulate_steps; i++)
   {
@@ -92,13 +95,15 @@ int main()
   return 0;
 }
 
-Eigen::VectorXd generate_ramp_vec(	uint32_t len, uint32_t lawnmower_period, 
-                                        double lawnmower_max, double lawnmower_min )
+Eigen::VectorXd generate_ramp_vec(	uint32_t len, uint32_t ramp_half_period, double ramp_rate )
 {
   Eigen::VectorXd lawnmower_vec(len);
 
-  for(uint32_t i = 0; i < len; i++)
-    lawnmower_vec(i) = !((i / lawnmower_period) % 2) ? lawnmower_max : lawnmower_min;
+  lawnmower_vec(0) = 0.0;
+  for(uint32_t i = 1; i < len; i++)
+  {
+    lawnmower_vec(i) = !((i / ramp_half_period) % 2) ?  lawnmower_vec(i-1) : lawnmower_vec(i-1) + ramp_rate;
+  }
 
   return lawnmower_vec;
 }

@@ -69,3 +69,17 @@ target_link_libraries(test_example
     ${catkin_LIBRARIES}
     ${PYTHON_LIBRARIES}
 )
+
+
+add_executable(test_example_2
+  src/test_example_2.cpp
+  src/EigenLinearMpc.cpp
+  src/OsqpEigenOptimization.cpp
+)
+
+target_link_libraries(test_example_2 
+    PRIVATE osqp::osqp
+    OsqpEigen::OsqpEigen
+    ${catkin_LIBRARIES}
+    ${PYTHON_LIBRARIES}
+)

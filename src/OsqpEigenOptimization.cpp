@@ -45,7 +45,7 @@ void OsqpEigenOpt::initializeSolver(const SparseQpProblem &qp_problem,
                                     bool verbosity ) 
 {
   solver_.settings()->setVerbosity(false);
-  solver_.settings()->setAlpha(0.95);
+  solver_.settings()->setAlpha(1.0);
 
   solver_.settings()->setAbsoluteTolerance(1e-6);
   solver_.settings()->setRelativeTolerance(1e-6);
@@ -53,7 +53,7 @@ void OsqpEigenOpt::initializeSolver(const SparseQpProblem &qp_problem,
   solver_.settings()->setMaxIteration(10000);
 
   solver_.settings()->setAdaptiveRho(true);
-  solver_.settings()->setAdaptiveRhoInterval(10);
+  solver_.settings()->setAdaptiveRhoInterval(5);
 
   solver_.data()->setNumberOfVariables(n_);
   solver_.data()->setNumberOfConstraints(m_);
