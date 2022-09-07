@@ -14,7 +14,7 @@ int main()
 
   // define lawnmower reference
   uint32_t n_simulate_steps = 30;
-  uint32_t horizon = 100;
+  uint32_t horizon = 40;
   double Q = 10000.0;
   double R = 1.0;
   Eigen::VectorXd Y_d_full = generate_lawnmower_vec(horizon + n_simulate_steps, 20, 1.0, 0.0);
@@ -25,7 +25,7 @@ int main()
    * 
    * y = [px]^T
    */
-  double T = 0.1;
+  double T = 0.05;
   Eigen::MatrixXd A(2, 2);
   A <<  1, T,
         0, 1;
@@ -55,7 +55,7 @@ int main()
   VecNd u_upper_bound(1);
   u_upper_bound << 7;
 
-  EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, Q, R);
+  EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, Q, R, u_lower_bound, u_upper_bound);
   VecNd U_sol;
   for(uint32_t i = 0; i < n_simulate_steps; i++)
   {

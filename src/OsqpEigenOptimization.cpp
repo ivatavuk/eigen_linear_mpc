@@ -44,11 +44,11 @@ OsqpEigenOpt::OsqpEigenOpt( const SparseQpProblem &qp_problem,
 void OsqpEigenOpt::initializeSolver(const SparseQpProblem &qp_problem, 
                                     bool verbosity ) 
 {
-  solver_.settings()->setVerbosity(true);
+  solver_.settings()->setVerbosity(false);
   solver_.settings()->setAlpha(0.95);
 
-  solver_.settings()->setAbsoluteTolerance(1e-7);
-  solver_.settings()->setRelativeTolerance(1e-7);
+  solver_.settings()->setAbsoluteTolerance(1e-6);
+  solver_.settings()->setRelativeTolerance(1e-6);
   solver_.settings()->setWarmStart(true);
   solver_.settings()->setMaxIteration(10000);
 
@@ -91,7 +91,6 @@ void OsqpEigenOpt::initializeSolver(const SparseQpProblem &qp_problem,
 
   lower_bound << lower_bound_x, lower_bound_eq, lower_bound_ieq;
   upper_bound << upper_bound_x, upper_bound_eq, upper_bound_ieq;
-  std::cout << "lower_bound_ = \n" << lower_bound_ << "\n";
 
   lower_bound_ = lower_bound;
   upper_bound_ = upper_bound;
