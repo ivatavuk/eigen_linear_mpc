@@ -51,7 +51,8 @@ private:
 
   double inf = 1e100;
 
-  VecNd lower_bound_, upper_bound_;
+  VecNd b_qp_, lower_bound_, upper_bound_;
+  SparseMat linearConstraintsMatrix_;
 };
 
 #endif //OSQP_EIGEN_OPTIMIZATION_HPP_

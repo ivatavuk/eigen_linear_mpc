@@ -51,9 +51,9 @@ int main()
   VecNd Y_d = Y_d_full.segment(0, horizon);
 
   VecNd u_lower_bound(1);
-  u_lower_bound << -0.5;
+  u_lower_bound << -10;
   VecNd u_upper_bound(1);
-  u_upper_bound << 0.5;
+  u_upper_bound << 10;
 
   EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, Q, R, u_lower_bound, u_upper_bound);
   VecNd U_sol;

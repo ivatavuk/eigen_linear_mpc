@@ -35,7 +35,8 @@ OsqpEigenOpt::OsqpEigenOpt( const SparseQpProblem &qp_problem,
                             bool verbosity ) 
   : alpha_(1.0),
   n_(qp_problem.A_qp.rows()), 
-  m_(n_ + qp_problem.A_eq.rows() + qp_problem.A_ieq.rows())
+  m_(qp_problem.upper_bound.rows() + qp_problem.A_eq.rows() + qp_problem.A_ieq.rows()),
+  linearConstraintsMatrix_(m_, n_)
 {
   initializeSolver(qp_problem, verbosity);
 }
@@ -43,28 +44,35 @@ OsqpEigenOpt::OsqpEigenOpt( const SparseQpProblem &qp_problem,
 void OsqpEigenOpt::initializeSolver(const SparseQpProblem &qp_problem, 
                                     bool verbosity ) 
 {
-  std::cout << "USLI U INITIALIZE SOLVEEEERRRQ!!!!\n\n";
-  solver_.settings()->setVerbosity(verbosity);
+  solver_.settings()->setVerbosity(true);
   solver_.settings()->setAlpha(alpha_);
 
-  solver_.settings()->setAdaptiveRho(false);
+  solver_.settings()->setAbsoluteTolerance(1e-8);
+  solver_.settings()->setRelativeTolerance(1e-8);
+  solver_.settings()->setWarmStart(false);
+  solver_.settings()->setMaxIteration(10000);
+
+  solver_.settings()->setAdaptiveRho(true);
+  solver_.settings()->setAdaptiveRhoInterval(10);
 
   solver_.data()->setNumberOfVariables(n_);
   solver_.data()->setNumberOfConstraints(m_);
-
+  
   solver_.data()->clearHessianMatrix();
   solver_.data()->setHessianMatrix(qp_problem.A_qp);
-  auto temp_b_qp = qp_problem.b_qp;
-  solver_.data()->setGradient(temp_b_qp);
+  b_qp_ = qp_problem.b_qp;
+  solver_.data()->setGradient(b_qp_);
 
   solver_.data()->clearLinearConstraintsMatrix();
 
   SparseMat linearConstraintsMatrix(m_, n_);
-  SparseMat identMatrix_n(n_, n_);
+  SparseMat identMatrix_n(qp_problem.upper_bound.rows(), qp_problem.upper_bound.rows());
   identMatrix_n.setIdentity();
 
-  setSparseBlock2(linearConstraintsMatrix, identMatrix_n, 0, 0);
-  solver_.data()->setLinearConstraintsMatrix(linearConstraintsMatrix);
+  setSparseBlock2(linearConstraintsMatrix_, identMatrix_n, 0, 0);
+  setSparseBlock2(linearConstraintsMatrix_, qp_problem.A_eq, identMatrix_n.rows(), 0);
+  setSparseBlock2(linearConstraintsMatrix_, qp_problem.A_ieq, identMatrix_n.rows() + qp_problem.A_eq.rows(), 0);
+  solver_.data()->setLinearConstraintsMatrix(linearConstraintsMatrix_);
 
   // bounds on optimization variables
   VecNd lower_bound_x = qp_problem.lower_bound;
@@ -83,6 +91,7 @@ void OsqpEigenOpt::initializeSolver(const SparseQpProblem &qp_problem,
 
   lower_bound << lower_bound_x, lower_bound_eq, lower_bound_ieq;
   upper_bound << upper_bound_x, upper_bound_eq, upper_bound_ieq;
+  std::cout << "lower_bound_ = \n" << lower_bound_ << "\n";
 
   lower_bound_ = lower_bound;
   upper_bound_ = upper_bound;
@@ -94,7 +103,9 @@ void OsqpEigenOpt::initializeSolver(const SparseQpProblem &qp_problem,
 
 void OsqpEigenOpt::setGradientAndInit(VecNd &b_qp ) 
 {
+  b_qp_ = b_qp;
   solver_.data()->setGradient(b_qp);
+  solver_.data()->setLinearConstraintsMatrix(linearConstraintsMatrix_);
   solver_.clearSolver();
   solver_.initSolver();
 }

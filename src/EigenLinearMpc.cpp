@@ -269,7 +269,7 @@ void EigenLinearMpc::MPC::updateQpMPC1()
 {
   VecNd b_qp = Q_C_A_T_C_B_ * x0_ - Q_C_A_T_*Y_d_;
 
-  //qp_problem_->b_qp = b_qp;
+  qp_problem_->b_qp = b_qp;
   osqp_eigen_opt_->setGradientAndInit(b_qp);
 }
 
@@ -288,15 +288,11 @@ void EigenLinearMpc::MPC::setupQpConstrainedMPC1()
   VecNd b_eq = VecNd::Zero(0);
   SparseMat A_ieq(0, N_ * n_u);
   VecNd b_ieq = VecNd::Zero(0);
-  std::cout << "tu smo!\n";
+  
   qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq, 
                                                   u_lower_bound_.colwise().replicate(N_), 
                                                   u_upper_bound_.colwise().replicate(N_));
-  
-  std::cout << "tu smo!\n";
   osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
-
-  std::cout << "tu smo!\n";
 }
 
 void EigenLinearMpc::MPC::setupQpMPC2() 
