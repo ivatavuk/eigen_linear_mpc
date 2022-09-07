@@ -13,7 +13,7 @@ int main()
 
   // define lawnmower reference
   uint32_t n_simulate_steps = 30;
-  uint32_t horizon = 40;
+  uint32_t horizon = 100;
   double Q = 10000.0;
   double R = 1.0;
   Eigen::VectorXd Y_d_full = generate_ramp_vec(horizon + n_simulate_steps, 20, 0.1);
@@ -24,7 +24,7 @@ int main()
    * 
    * y = [px]^T
    */
-  double T = 0.05;
+  double T = 0.1;
   Eigen::MatrixXd A(4, 4);
   A <<  1, 0, T, 0,
         0, 1, 0, T,
@@ -58,7 +58,23 @@ int main()
   VecNd u_upper_bound(2);
   u_upper_bound << 7, 2;
 
-  EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, Q, R, u_lower_bound, u_upper_bound);
+  //EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, Q, R, u_lower_bound, u_upper_bound);
+  double W_y = 8000;
+  double wBddx = 80;
+  double wAddx = 8;
+  double wAx = 1;
+
+  MatNd w_u(2, 2); 
+  w_u <<  wBddx,  0,
+          0,      wAddx;
+
+  MatNd w_x(4, 4);
+  w_x <<  0, 0,   0, 0,
+          0, wAx, 0, 0,
+          0, 0,   0, 0,
+          0, 0,   0, 0;
+
+  EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, W_y, w_u, w_x);
   VecNd U_sol;
   for(uint32_t i = 0; i < n_simulate_steps; i++)
   {
@@ -86,9 +102,8 @@ int main()
     );
 
     for(auto curr_U : mpc.extractU(U_sol))
-    {
       plt::plot(curr_U);
-    }
+
     plt::show();
 
     plt::plot(eigen2stdVec(Y_d));

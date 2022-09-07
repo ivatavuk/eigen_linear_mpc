@@ -131,9 +131,13 @@ EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
 }
 
 EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
-                          const VecNd &Y_d, const VecNd &x0, const MatNd &w_u, 
-                          const MatNd &w_x ) 
-: linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), w_u_(w_u), w_x_(w_x)
+                          const VecNd &Y_d, const VecNd &x0, double W_y, 
+                          const MatNd &w_u, const MatNd &w_x ) 
+: linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), 
+  W_y_(W_y), w_u_(w_u), w_x_(w_x),
+  A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
+  B_mpc_(SparseMat(N_ * linear_system_.n_x, linear_system_.n_x)),
+  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x))
 {
   mpc_type_ = MPC2;
   checkMatrixDimensions();
@@ -304,11 +308,11 @@ void EigenLinearMpc::MPC::setupQpMPC2()
   W_x_B_ = W_x_*B_mpc_;
   W_x_A_ = W_x_*A_mpc_;
 
-  SparseMat A_qp = 	Q_*(C_A_).transpose()*(C_A_) 
+  SparseMat A_qp = 	W_y_*(C_A_).transpose()*(C_A_) 
                     + W_u_.transpose()*W_u_ 
                     + (W_x_A_).transpose()*(W_x_A_);
 
-  VecNd b_qp = ( Q_*(C_B_*x0_ - Y_d_).transpose()*C_A_ +
+  VecNd b_qp = ( W_y_*(C_B_*x0_ - Y_d_).transpose()*C_A_ +
                  (W_x_B_*x0_).transpose()*(W_x_A_) 
                  ).transpose();
 
@@ -323,7 +327,7 @@ void EigenLinearMpc::MPC::setupQpMPC2()
 
 void EigenLinearMpc::MPC::updateQpMPC2() 
 {
-  VecNd b_qp = (	Q_*(C_B_*x0_ - Y_d_).transpose()*C_A_ +
+  VecNd b_qp = (	W_y_*(C_B_*x0_ - Y_d_).transpose()*C_A_ +
                   (W_x_B_*x0_).transpose()*(W_x_A_)
                   ).transpose();
   qp_problem_->b_qp = b_qp;

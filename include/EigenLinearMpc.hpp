@@ -29,7 +29,7 @@
               y(k) =    C * x(k)
 
         - MPC II:
-          min  	Q * ||Y - Y_d||^2 + ||W_u * U||^2 + ||W_x * X||^2
+          min  	Wy * ||Y - Y_d||^2 + ||W_u * U||^2 + ||W_x * X||^2
            U
             
           s.t. 	(implicit constraints)
@@ -96,7 +96,7 @@ public:
       const VecNd &u_lower_bound, const VecNd &u_upper_bound);
 
   MPC(const LinearSystem &linear_system, uint32_t horizon, 
-      const VecNd &Y_d, const VecNd &x0, const MatNd &w_u, 
+      const VecNd &Y_d, const VecNd &x0, double W_y, const MatNd &w_u, 
       const MatNd &w_x); 
   
   void setYd(const VecNd &Y_d_in); // set Y_d from an Eigen vector Nd
@@ -125,6 +125,7 @@ private:
 
   MatNd W_u_, w_u_;
   MatNd W_x_, w_x_;
+  double W_y_;
 
   // matrices saved for faster QP problem update
   SparseMat C_A_; // C_mpc * A_mpc
