@@ -53,12 +53,12 @@ int main()
   
   VecNd Y_d = Y_d_full.segment(0, horizon);
 
-  VecNd u_lower_bound(1);
-  u_lower_bound << -7;
-  VecNd u_upper_bound(1);
-  u_upper_bound << 7;
+  VecNd u_lower_bound(2);
+  u_lower_bound << -7, 0;
+  VecNd u_upper_bound(2);
+  u_upper_bound << 7, 0;
 
-  EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, Q, R);
+  EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, Q, R, u_lower_bound, u_upper_bound);
   VecNd U_sol;
   for(uint32_t i = 0; i < n_simulate_steps; i++)
   {
@@ -84,9 +84,14 @@ int main()
     ChronoCall(microseconds,
       U_sol = mpc.solve();
     );
-    plt::plot(eigen2stdVec(U_sol));
-    plt::show();
 
+    auto extracted_U = mpc.extractU(U_sol);
+    for(auto curr_U : extracted_U)
+    {
+      plt::plot(curr_U);
+      plt::show();
+    }
+    
     plt::plot(eigen2stdVec(Y_d));
     plt::plot(eigen2stdVec(mpc.calculateY(U_sol))); //Y does not show current point!!
     plt::show();

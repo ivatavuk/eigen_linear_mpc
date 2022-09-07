@@ -343,6 +343,20 @@ VecNd EigenLinearMpc::MPC::calculateY(const VecNd &U_in) const
   return Y;
 }
 
+std::vector< std::vector<double> > EigenLinearMpc::MPC::extractU(const VecNd &U_in) const 
+{
+  std::vector<std::vector<double>> return_vector_U;
+  for(uint32_t i = 0; i < linear_system_.n_u; i++)
+    return_vector_U.push_back( std::vector<double>() );
+
+  for(uint32_t i = 0; i < U_in.rows(); i++)
+  {
+    uint32_t mod = i % linear_system_.n_u;
+    return_vector_U[mod].push_back(U_in(i));
+  }
+  return return_vector_U;
+}
+
 void EigenLinearMpc::MPC::setWu() 
 {
   std::ostringstream msg;

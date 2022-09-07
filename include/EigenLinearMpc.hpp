@@ -106,6 +106,7 @@ public:
   
   VecNd calculateX(const VecNd &U_in) const;
   VecNd calculateY(const VecNd &U_in) const;
+  std::vector< std::vector<double> > extractU(const VecNd &U_in) const; 
 
   VecNd solve() const;
 
