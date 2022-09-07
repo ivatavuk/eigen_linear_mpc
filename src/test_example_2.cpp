@@ -54,9 +54,9 @@ int main()
   VecNd Y_d = Y_d_full.segment(0, horizon);
 
   VecNd u_lower_bound(2);
-  u_lower_bound << -7, 0;
+  u_lower_bound << -7, -2;
   VecNd u_upper_bound(2);
-  u_upper_bound << 7, 0;
+  u_upper_bound << 7, 2;
 
   EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, Q, R, u_lower_bound, u_upper_bound);
   VecNd U_sol;
@@ -91,7 +91,7 @@ int main()
       plt::plot(curr_U);
       plt::show();
     }
-    
+
     plt::plot(eigen2stdVec(Y_d));
     plt::plot(eigen2stdVec(mpc.calculateY(U_sol))); //Y does not show current point!!
     plt::show();
