@@ -361,6 +361,21 @@ std::vector< std::vector<double> > EigenLinearMpc::MPC::extractU(const VecNd &U_
   return return_vector_U;
 }
 
+std::vector< std::vector<double> > EigenLinearMpc::MPC::extractX(const VecNd &U_in) const
+{
+  auto X = calculateX(U_in);
+  std::vector<std::vector<double>> return_vector_X;
+  for(uint32_t i = 0; i < linear_system_.n_x; i++)
+    return_vector_X.push_back( std::vector<double>() );
+
+  for(uint32_t i = 0; i < X.rows(); i++)
+  {
+    uint32_t mod = i % linear_system_.n_x;
+    return_vector_X[mod].push_back(X(i));
+  }
+  return return_vector_X;
+} 
+
 void EigenLinearMpc::MPC::setWu() 
 {
   std::ostringstream msg;
