@@ -39,10 +39,10 @@ int main()
   
   Eigen::MatrixXd D = Eigen::MatrixXd::Zero(1, 1);
 
-  EigenLinearMpc::LinearSystem example_system(SparseQpProblem::sparseMatrixFromDense(A), 
-                                              SparseQpProblem::sparseMatrixFromDense(B), 
-                                              SparseQpProblem::sparseMatrixFromDense(C), 
-                                              SparseQpProblem::sparseMatrixFromDense(D));
+  EigenLinearMpc::LinearSystem example_system(A.sparseView(), 
+                                              B.sparseView(), 
+                                              C.sparseView(), 
+                                              D.sparseView());
 
   
   Eigen::VectorXd x0(2);

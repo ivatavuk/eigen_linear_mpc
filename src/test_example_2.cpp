@@ -42,10 +42,10 @@ int main()
   
   Eigen::MatrixXd D = Eigen::MatrixXd::Zero(1, 2);
 
-  EigenLinearMpc::LinearSystem example_system(SparseQpProblem::sparseMatrixFromDense(A), 
-                                              SparseQpProblem::sparseMatrixFromDense(B), 
-                                              SparseQpProblem::sparseMatrixFromDense(C), 
-                                              SparseQpProblem::sparseMatrixFromDense(D));
+  EigenLinearMpc::LinearSystem example_system(A.sparseView(), 
+                                              B.sparseView(), 
+                                              C.sparseView(), 
+                                              D.sparseView());
 
   
   Eigen::VectorXd x0(4);
@@ -74,8 +74,8 @@ int main()
           0, 0,   0, 0,
           0, 0,   0, 0;
 
-  SparseMat w_u_sparse = SparseQpProblem::sparseMatrixFromDense(w_u);
-  SparseMat w_x_sparse = SparseQpProblem::sparseMatrixFromDense(w_x);
+  SparseMat w_u_sparse = w_u.sparseView();
+  SparseMat w_x_sparse = w_x.sparseView();
 
   EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, W_y, w_u_sparse, w_x_sparse);
   VecNd U_sol;

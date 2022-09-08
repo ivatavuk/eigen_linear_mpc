@@ -59,30 +59,14 @@ struct SparseQpProblem {
 
   SparseQpProblem(DenseQpProblem dense_qp_prob) 
   {
-    A_qp = sparseMatrixFromDense(dense_qp_prob.A_qp);
-    A_eq = sparseMatrixFromDense(dense_qp_prob.A_eq);
-    A_ieq = sparseMatrixFromDense(dense_qp_prob.A_ieq);
+    A_qp = dense_qp_prob.A_qp.sparseView();
+    A_eq = dense_qp_prob.A_eq.sparseView();
+    A_ieq = dense_qp_prob.A_ieq.sparseView();
 
     b_qp = dense_qp_prob.b_qp;
     b_eq = dense_qp_prob.b_eq;
     b_ieq = dense_qp_prob.b_ieq;
   };
-
-  static SparseMat sparseMatrixFromDense(const MatNd &matrix) //TODO: does Eigen support something like this?
-  {
-    SparseMat sparse_matrix(matrix.rows(), matrix.cols());
-    for(uint32_t j = 0; j < matrix.cols(); j++)
-    {
-      for(uint32_t i = 0; i < matrix.rows(); i++)
-      {
-        if(matrix(i, j) != 0)
-        {
-          sparse_matrix.insert(i, j) = matrix(i, j);	
-        }
-      }
-    }
-    return sparse_matrix;
-  }
 };
 
 #endif //OP_PROBLEM_HPP_
