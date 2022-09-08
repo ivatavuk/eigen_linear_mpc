@@ -132,18 +132,20 @@ EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
 
 EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
                           const VecNd &Y_d, const VecNd &x0, double W_y, 
-                          const MatNd &w_u, const MatNd &w_x ) 
+                          const SparseMat &w_u, const SparseMat &w_x ) 
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), 
   W_y_(W_y), w_u_(w_u), w_x_(w_x),
   A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
   B_mpc_(SparseMat(N_ * linear_system_.n_x, linear_system_.n_x)),
-  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x))
+  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x)),
+  W_u_(SparseMat(N_ * linear_system_.n_u, N_ * linear_system_.n_u)),
+  W_x_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_x))
+
 {
   mpc_type_ = MPC2;
   checkMatrixDimensions();
   setupMpcDynamics();
-  setWu();
-  setWx();
+  setWeightMatrices();
 }
 
 void EigenLinearMpc::MPC::checkMatrixDimensions() const 
@@ -376,72 +378,39 @@ std::vector< std::vector<double> > EigenLinearMpc::MPC::extractX(const VecNd &U_
   return return_vector_X;
 } 
 
-void EigenLinearMpc::MPC::setWu() 
+void EigenLinearMpc::MPC::setWeightMatrices() 
 {
-  std::ostringstream msg;
-
-  uint32_t n_r = w_u_.rows();
-  uint32_t n_c = w_u_.cols();
-  uint32_t n_u = linear_system_.n_u;
-
-  if ((int)n_r != n_c) 
-  {
-    msg << "set_w_u: Input matrix needs to be a square matrix\n mat.dimensions = (" << n_r << " != " 
-        << n_c << ")";
-    throw std::runtime_error(msg.str());
-  }
-  if ((int)n_r != n_u) 
-  {
-    msg << "set_w_u: Input matrix needs to have number of rows equal to n_u\n (" << n_r << " != " 
-        << n_u << ")";
-    throw std::runtime_error(msg.str());
-  }
-
-  MatNd W_u_temp = MatNd::Zero(N_*n_u, N_*n_u);
-
+  checkWeightDimensions();
   for (int i = 0; i < N_; i++) 
   {
-    for (int j = 0; j < N_; j++) 
-    {
-      if (i == j) 
-      {
-        W_u_temp.block( n_r * i, n_c * j, n_r, n_c) = w_u_;
-      }
-    }
+    setSparseBlock(W_u_, w_u_, linear_system_.n_u * i, linear_system_.n_u * i);
+    setSparseBlock(W_x_, w_x_, linear_system_.n_x * i, linear_system_.n_x * i);
   }
-  W_u_ = W_u_temp;
 }
 
-void EigenLinearMpc::MPC::setWx() 
+void EigenLinearMpc::MPC::checkWeightDimensions() const
 {
   std::ostringstream msg;
-
-  uint32_t n_r = w_x_.rows();
-  uint32_t n_c = w_x_.cols();
-  uint32_t n_x = linear_system_.n_x;
-
-  if ((int)n_r != n_c) {
-    msg << "set_w_x: Input matrix needs to be a square matrix\n mat.dimensions = (" << n_r << " != " 
-        << n_c << ")";
-    throw std::runtime_error(msg.str());
-  }
-  if ((int)n_r != n_x) {
-    msg << "set_w_x: Input matrix needs to have number of rows equal to n_x\n (" << n_r << " != " 
-        << n_x << ")";
-    throw std::runtime_error(msg.str());
-  }
-
-  MatNd W_x_temp = MatNd::Zero(N_*n_x, N_*n_x);
-
-  for (int i = 0; i < N_; i++) 
+  if ((int)w_u_.rows() != w_u_.cols()) 
   {
-    for (int j = 0; j < N_; j++) 
-    {
-      if (i == j) 
-      {
-        W_x_temp.block( n_r * i, n_c * j, n_r, n_c) = w_x_;
-      }
-    }
+    msg << "set_w_u: Input matrix needs to be a square matrix\n mat.dimensions = (" << w_u_.rows() << " != " 
+        << w_u_.cols() << ")";
+    throw std::runtime_error(msg.str());
   }
-  W_x_ = W_x_temp;
+  if ((int)w_u_.rows() != linear_system_.n_u) 
+  {
+    msg << "set_w_u: Input matrix needs to have number of rows equal to n_u\n (" << w_u_.rows() << " != " 
+        << linear_system_.n_u << ")";
+    throw std::runtime_error(msg.str());
+  }
+  if ((int)w_x_.rows() != w_x_.cols()) {
+    msg << "set_w_x: Input matrix needs to be a square matrix\n mat.dimensions = (" << w_x_.rows() << " != " 
+        << w_x_.cols() << ")";
+    throw std::runtime_error(msg.str());
+  }
+  if ((int)w_x_.rows() != linear_system_.n_x) {
+    msg << "set_w_x: Input matrix needs to have number of rows equal to n_x\n (" << w_x_.rows() << " != " 
+        << linear_system_.n_x << ")";
+    throw std::runtime_error(msg.str());
+  }
 }

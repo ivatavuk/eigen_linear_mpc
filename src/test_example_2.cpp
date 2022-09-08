@@ -13,7 +13,7 @@ int main()
 
   // define lawnmower reference
   uint32_t n_simulate_steps = 30;
-  uint32_t horizon = 200;
+  uint32_t horizon = 40;
   double Q = 10000.0;
   double R = 1.0;
   Eigen::VectorXd Y_d_full = generate_ramp_vec(horizon + n_simulate_steps, 20, 0.1);
@@ -74,7 +74,10 @@ int main()
           0, 0,   0, 0,
           0, 0,   0, 0;
 
-  EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, W_y, w_u, w_x);
+  SparseMat w_u_sparse = SparseQpProblem::sparseMatrixFromDense(w_u);
+  SparseMat w_x_sparse = SparseQpProblem::sparseMatrixFromDense(w_x);
+
+  EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, W_y, w_u_sparse, w_x_sparse);
   VecNd U_sol;
   for(uint32_t i = 0; i < n_simulate_steps; i++)
   {

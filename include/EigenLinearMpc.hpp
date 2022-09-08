@@ -96,8 +96,8 @@ public:
       const VecNd &u_lower_bound, const VecNd &u_upper_bound);
 
   MPC(const LinearSystem &linear_system, uint32_t horizon, 
-      const VecNd &Y_d, const VecNd &x0, double W_y, const MatNd &w_u, 
-      const MatNd &w_x); 
+      const VecNd &Y_d, const VecNd &x0, double W_y, 
+      const SparseMat &w_u, const SparseMat &w_x); 
   
   void setYd(const VecNd &Y_d_in); // set Y_d from an Eigen vector Nd
 
@@ -124,8 +124,7 @@ private:
   std::unique_ptr<SparseQpProblem> qp_problem_;
   double Q_, R_; 
 
-  MatNd W_u_, w_u_;
-  MatNd W_x_, w_x_;
+  SparseMat W_u_, w_u_, W_x_, w_x_;
   double W_y_;
 
   // matrices saved for faster QP problem update
@@ -148,8 +147,7 @@ private:
 
   mpc_type mpc_type_;
 
-  void setWx();
-  void setWu();
+  void setWeightMatrices();
 
   //Sets A_mpc, B_mpc, C_mpc
   void setupMpcDynamics();
@@ -164,6 +162,7 @@ private:
 
   void checkMatrixDimensions() const; 
   void checkBoundsDimensions() const; 
+  void checkWeightDimensions() const;
 
   VecNd u_lower_bound_, u_upper_bound_,
         x_lower_bound_, x_upper_bound_;
