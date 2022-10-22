@@ -74,10 +74,8 @@ add_executable(test_example
 )
 
 target_link_libraries(test_example 
-    PRIVATE osqp::osqp
-    OsqpEigen::OsqpEigen
-    ${catkin_LIBRARIES}
-    ${PYTHON_LIBRARIES}
+  PRIVATE ${LIBRARY_TARGET_NAME}
+  ${PYTHON_LIBRARIES}
 )
 
 
@@ -88,8 +86,6 @@ add_executable(test_example_2
 )
 
 target_link_libraries(test_example_2 
-    PRIVATE osqp::osqp
-    OsqpEigen::OsqpEigen
-    ${catkin_LIBRARIES}
-    ${PYTHON_LIBRARIES}
+  PRIVATE ${LIBRARY_TARGET_NAME}
+  ${PYTHON_LIBRARIES}
 )
