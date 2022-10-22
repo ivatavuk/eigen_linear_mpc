@@ -14,8 +14,6 @@ int main()
   // define lawnmower reference
   uint32_t n_simulate_steps = 30;
   uint32_t horizon = 40;
-  double Q = 10000.0;
-  double R = 1.0;
   Eigen::VectorXd Y_d_full = generate_ramp_vec(horizon + n_simulate_steps, 20, 0.1);
 
   /**                   Define linear system

@@ -11,7 +11,7 @@ void setSparseBlock(Eigen::SparseMatrix<double> &output_matrix, const Eigen::Spa
     std::cout << "output_matrix.rows() - j = " << output_matrix.rows() - j << "\n";
     throw std::runtime_error("setSparseBlock: Can't fit block");
   }
-  for (int k=0; k < input_block.outerSize(); ++k)
+  for (uint32_t k = 0; k < input_block.outerSize(); ++k)
   {
     for (Eigen::SparseMatrix<double>::InnerIterator it(input_block,k); it; ++it)
     {
@@ -25,7 +25,7 @@ MatNd matrixPow(const MatNd &input_mat, uint32_t power)
 {
   MatNd output_mat = MatNd::Identity(input_mat.rows(), input_mat.cols());
 
-  for (int i = 0; i < power; i++) 
+  for (uint32_t i = 0; i < power; i++) 
     output_mat = output_mat * input_mat;
 
   return output_mat;
@@ -36,7 +36,7 @@ SparseMat matrixPow(const SparseMat &input_mat, uint32_t power)
   SparseMat output_mat(input_mat.rows(), input_mat.cols());
   output_mat.setIdentity();
 
-  for (int i = 0; i < power; i++) 
+  for (uint32_t i = 0; i < power; i++) 
     output_mat = output_mat * input_mat;
   
   return output_mat;
@@ -105,7 +105,7 @@ void EigenLinearMpc::LinearSystem::checkMatrixDimensions() const
 // -------------- MPC -----------------
 EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
                           const VecNd &Y_d, const VecNd &x0, double Q, double R ) 
-: linear_system_(linear_system), N_(horizon), Y_d_(Y_d), Q_(Q), R_(R), x0_(x0),
+: linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), Q_(Q), R_(R),
   A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
   B_mpc_(SparseMat(N_ * linear_system_.n_x, linear_system_.n_x)),
   C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x))
@@ -118,7 +118,7 @@ EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
 EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
                           const VecNd &Y_d, const VecNd &x0, double Q, double R,
                           const VecNd &u_lower_bound, const VecNd &u_upper_bound ) 
-: linear_system_(linear_system), N_(horizon), Y_d_(Y_d), Q_(Q), R_(R), x0_(x0),
+: linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), Q_(Q), R_(R),
   u_lower_bound_(u_lower_bound), u_upper_bound_(u_upper_bound),
   A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
   B_mpc_(SparseMat(N_ * linear_system_.n_x, linear_system_.n_x)),
@@ -129,18 +129,17 @@ EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
   checkMatrixDimensions();
   setupMpcDynamics();
 }
-
+//TODO add bounds here!
 EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
                           const VecNd &Y_d, const VecNd &x0, double W_y, 
                           const SparseMat &w_u, const SparseMat &w_x ) 
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), 
   W_y_(W_y), w_u_(w_u), w_x_(w_x),
+  W_u_(SparseMat(N_ * linear_system_.n_u, N_ * linear_system_.n_u)),
+  W_x_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_x)),
   A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
   B_mpc_(SparseMat(N_ * linear_system_.n_x, linear_system_.n_x)),
-  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x)),
-  W_u_(SparseMat(N_ * linear_system_.n_u, N_ * linear_system_.n_u)),
-  W_x_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_x))
-
+  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x))
 {
   mpc_type_ = MPC2;
   checkMatrixDimensions();
@@ -153,13 +152,13 @@ void EigenLinearMpc::MPC::checkMatrixDimensions() const
   std::ostringstream msg;
 
   // Check matrix dimensions
-  if ((int)Y_d_.rows() != N_ * linear_system_.n_y) 
+  if ((uint32_t)Y_d_.rows() != N_ * linear_system_.n_y) 
   {
     msg << "MPC: Vector 'Y_d' size error\n Y_d_.rows() = " << Y_d_.rows() 
         << ", needs to be = " << N_ * linear_system_.n_y << "\n";
     throw std::runtime_error(msg.str());
   }
-  if ((int)x0_.rows() != linear_system_.n_x) 
+  if ((uint32_t)x0_.rows() != linear_system_.n_x) 
   {
     msg << "MPC: Vector 'x0' size error\n x0.rows() = " << x0_.rows() 
         << ", needs to be = " << linear_system_.n_x << "\n";
@@ -171,13 +170,13 @@ void EigenLinearMpc::MPC::checkBoundsDimensions() const
 {
   std::ostringstream msg;
 
-  if ((int)u_lower_bound_.rows() != linear_system_.n_u) 
+  if ((uint32_t)u_lower_bound_.rows() != linear_system_.n_u) 
   {
     msg << "MPC: Vector 'u_lower_bounds_' size error\n lower_bounds_.rows() = " << u_lower_bound_.rows() 
         << ", needs to be = " << linear_system_.n_u << "\n";
     throw std::runtime_error(msg.str());
   }
-  if ((int)u_upper_bound_.rows() != linear_system_.n_u) 
+  if ((uint32_t)u_upper_bound_.rows() != linear_system_.n_u) 
   {
     msg << "MPC: Vector 'u_upper_bound_' size error\n lower_bounds_.rows() = " << u_upper_bound_.rows() 
         << ", needs to be = " << linear_system_.n_u << "\n";
@@ -205,11 +204,11 @@ void EigenLinearMpc::MPC::setupMpcDynamics()
   uint32_t n_u = linear_system_.n_u;
   uint32_t n_y = linear_system_.n_y;
   
-  for (int i = 0; i < N_; i++) 
+  for (uint32_t i = 0; i < N_; i++) 
   {
     setSparseBlock(B_mpc_, matrixPow(linear_system_.A, i+1), n_x * i, 0);
     setSparseBlock(C_mpc_, linear_system_.C, n_y * i, n_x * i);
-    for (int j = 0; j <= i; j++) 
+    for (uint32_t j = 0; j <= i; j++) 
     {
       if (i == j) 
         setSparseBlock(A_mpc_, linear_system_.B, n_x * i, n_u * j);
@@ -381,7 +380,7 @@ std::vector< std::vector<double> > EigenLinearMpc::MPC::extractX(const VecNd &U_
 void EigenLinearMpc::MPC::setWeightMatrices() 
 {
   checkWeightDimensions();
-  for (int i = 0; i < N_; i++) 
+  for (uint32_t i = 0; i < N_; i++) 
   {
     setSparseBlock(W_u_, w_u_, linear_system_.n_u * i, linear_system_.n_u * i);
     setSparseBlock(W_x_, w_x_, linear_system_.n_x * i, linear_system_.n_x * i);
@@ -391,24 +390,24 @@ void EigenLinearMpc::MPC::setWeightMatrices()
 void EigenLinearMpc::MPC::checkWeightDimensions() const
 {
   std::ostringstream msg;
-  if ((int)w_u_.rows() != w_u_.cols()) 
+  if ((uint32_t)w_u_.rows() != w_u_.cols()) 
   {
     msg << "set_w_u: Input matrix needs to be a square matrix\n mat.dimensions = (" << w_u_.rows() << " != " 
         << w_u_.cols() << ")";
     throw std::runtime_error(msg.str());
   }
-  if ((int)w_u_.rows() != linear_system_.n_u) 
+  if ((uint32_t)w_u_.rows() != linear_system_.n_u) 
   {
     msg << "set_w_u: Input matrix needs to have number of rows equal to n_u\n (" << w_u_.rows() << " != " 
         << linear_system_.n_u << ")";
     throw std::runtime_error(msg.str());
   }
-  if ((int)w_x_.rows() != w_x_.cols()) {
+  if ((uint32_t)w_x_.rows() != w_x_.cols()) {
     msg << "set_w_x: Input matrix needs to be a square matrix\n mat.dimensions = (" << w_x_.rows() << " != " 
         << w_x_.cols() << ")";
     throw std::runtime_error(msg.str());
   }
-  if ((int)w_x_.rows() != linear_system_.n_x) {
+  if ((uint32_t)w_x_.rows() != linear_system_.n_x) {
     msg << "set_w_x: Input matrix needs to have number of rows equal to n_x\n (" << w_x_.rows() << " != " 
         << linear_system_.n_x << ")";
     throw std::runtime_error(msg.str());

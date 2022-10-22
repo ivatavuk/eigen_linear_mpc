@@ -80,10 +80,10 @@ struct LinearSystem {
   void checkMatrixDimensions() const;
   
   //system dynamics
+  SparseMat A, B, C, D;
   uint32_t n_x; // x vector dimension
   uint32_t n_u; // u vector dimension
   uint32_t n_y; // y vector dimension
-  SparseMat A, B, C, D;
 };
 
 class MPC {
@@ -112,20 +112,26 @@ public:
   VecNd solve() const;
 
 private:
-
-  uint32_t N_; // mpc prediction horizon
   LinearSystem linear_system_; // linear_system
+  uint32_t N_; // mpc prediction horizon
   
-  SparseMat A_mpc_, B_mpc_, C_mpc_; // mpc dynamics matrices
-
   VecNd Y_d_; //refrence output
   VecNd x0_; //initial state
 
-  std::unique_ptr<SparseQpProblem> qp_problem_;
   double Q_, R_; 
 
-  SparseMat W_u_, w_u_, W_x_, w_x_;
   double W_y_;
+  SparseMat w_u_, w_x_;
+  SparseMat W_u_, W_x_;
+
+  VecNd u_lower_bound_, u_upper_bound_,
+        x_lower_bound_, x_upper_bound_;
+
+  SparseMat A_mpc_, B_mpc_, C_mpc_; // mpc dynamics matrices
+
+
+  std::unique_ptr<SparseQpProblem> qp_problem_;
+
 
   // matrices saved for faster QP problem update
   SparseMat C_A_; // C_mpc * A_mpc
@@ -163,9 +169,6 @@ private:
   void checkMatrixDimensions() const; 
   void checkBoundsDimensions() const; 
   void checkWeightDimensions() const;
-
-  VecNd u_lower_bound_, u_upper_bound_,
-        x_lower_bound_, x_upper_bound_;
 
   std::unique_ptr<OsqpEigenOpt> osqp_eigen_opt_;
 };
