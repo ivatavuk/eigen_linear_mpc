@@ -53,6 +53,9 @@ private:
 
   VecNd b_qp_, lower_bound_, upper_bound_;
   SparseMat linearConstraintsMatrix_;
+
+  static void setSparseBlock( Eigen::SparseMatrix<double> &output_matrix, const Eigen::SparseMatrix<double> &input_block,
+                              uint32_t i, uint32_t j );
 };
 
 #endif //OSQP_EIGEN_OPTIMIZATION_HPP_

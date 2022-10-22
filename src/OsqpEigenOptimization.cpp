@@ -7,26 +7,6 @@
 
 #include "OsqpEigenOptimization.hpp"
 
-void setSparseBlock2(Eigen::SparseMatrix<double> &output_matrix, const Eigen::SparseMatrix<double> &input_block,
-                    uint32_t i, uint32_t j) 
-{
-  if((input_block.rows() > output_matrix.rows() - i) || (input_block.cols() > output_matrix.cols() - j))
-  {
-    std::cout << "input_block.cols() = " << input_block.cols() << "\n";
-    std::cout << "input_block.rows() = " << input_block.rows() << "\n";
-    std::cout << "output_matrix.cols() - i = " << output_matrix.cols() - i << "\n";
-    std::cout << "output_matrix.rows() - j = " << output_matrix.rows() - j << "\n";
-    throw std::runtime_error("setSparseBlock: Can't fit block");
-  }
-  for (int k=0; k < input_block.outerSize(); ++k)
-  {
-    for (Eigen::SparseMatrix<double>::InnerIterator it(input_block,k); it; ++it)
-    {
-      output_matrix.insert(it.row() + i, it.col() + j) = it.value();
-    }
-  }
-}
-
 OsqpEigenOpt::OsqpEigenOpt() 
 {
 }
@@ -44,7 +24,7 @@ OsqpEigenOpt::OsqpEigenOpt( const SparseQpProblem &qp_problem,
 void OsqpEigenOpt::initializeSolver(const SparseQpProblem &qp_problem, 
                                     bool verbosity ) 
 {
-  solver_.settings()->setVerbosity(false);
+  solver_.settings()->setVerbosity(verbosity);
   solver_.settings()->setAlpha(1.0);
 
   solver_.settings()->setAbsoluteTolerance(1e-6);
@@ -69,9 +49,9 @@ void OsqpEigenOpt::initializeSolver(const SparseQpProblem &qp_problem,
   SparseMat identMatrix_n(qp_problem.upper_bound.rows(), qp_problem.upper_bound.rows());
   identMatrix_n.setIdentity();
 
-  setSparseBlock2(linearConstraintsMatrix_, identMatrix_n, 0, 0);
-  setSparseBlock2(linearConstraintsMatrix_, qp_problem.A_eq, identMatrix_n.rows(), 0);
-  setSparseBlock2(linearConstraintsMatrix_, qp_problem.A_ieq, identMatrix_n.rows() + qp_problem.A_eq.rows(), 0);
+  setSparseBlock(linearConstraintsMatrix_, identMatrix_n, 0, 0);
+  setSparseBlock(linearConstraintsMatrix_, qp_problem.A_eq, identMatrix_n.rows(), 0);
+  setSparseBlock(linearConstraintsMatrix_, qp_problem.A_ieq, identMatrix_n.rows() + qp_problem.A_eq.rows(), 0);
   solver_.data()->setLinearConstraintsMatrix(linearConstraintsMatrix_);
 
   // bounds on optimization variables
@@ -111,7 +91,7 @@ void OsqpEigenOpt::setGradientAndInit(VecNd &b_qp )
 
 VecNd OsqpEigenOpt::solveProblem()
 {
-  auto exit_flag = solver_.solveProblem();
+  solver_.solveProblem();
   return solver_.getSolution();
 }
 
@@ -120,3 +100,22 @@ bool OsqpEigenOpt::checkFeasibility() //Call this after calling solve
   return !( (int) solver_.getStatus() == OSQP_PRIMAL_INFEASIBLE );
 }
 
+void OsqpEigenOpt::setSparseBlock( Eigen::SparseMatrix<double> &output_matrix, const Eigen::SparseMatrix<double> &input_block,
+                                          uint32_t i, uint32_t j ) 
+{
+  if((input_block.rows() > output_matrix.rows() - i) || (input_block.cols() > output_matrix.cols() - j))
+  {
+    std::cout << "input_block.cols() = " << input_block.cols() << "\n";
+    std::cout << "input_block.rows() = " << input_block.rows() << "\n";
+    std::cout << "output_matrix.cols() - i = " << output_matrix.cols() - i << "\n";
+    std::cout << "output_matrix.rows() - j = " << output_matrix.rows() - j << "\n";
+    throw std::runtime_error("setSparseBlock: Can't fit block");
+  }
+  for (int k=0; k < input_block.outerSize(); ++k)
+  {
+    for (Eigen::SparseMatrix<double>::InnerIterator it(input_block,k); it; ++it)
+    {
+      output_matrix.insert(it.row() + i, it.col() + j) = it.value();
+    }
+  }
+}
