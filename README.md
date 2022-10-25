@@ -1,9 +1,10 @@
-# Reference tracking Linear MPC library using Eigen and OSQP QP solver
-Reference tracking Linear MPC library using Eigen OSQP solver 
+# Linear reference tracking MPC library using Eigen and OSQP QP solver
+
+Linear reference tracking MPC library using Eigen linear algebra library, OSQP quadratic programming solver and the OsqpEigen wrapper for OSQP.
 
 ## 🖥️ Using the library
 
-Easy to use library, using Eigen matrices and vectors:
+Library is easy to use, using Eigen matrices and vectors to describe the MPC problem:
 
 ```cpp
 //Define a discrete linear system 
