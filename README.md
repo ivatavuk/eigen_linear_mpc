@@ -102,17 +102,32 @@ $$
 
 ## 📄 Dependences
 
-This project depends on [`osqp`](https://github.com/ivatavuk/osqp) and [osqp-eigen](https://github.com/ivatavuk/osqp-eigen)
+This project depends on [`osqp`](https://github.com/osqp/osqp) and [osqp-eigen](https://github.com/robotology/osqp-eigen)
 
 ## 🛠️ Usage
 
 ### ⚙️ Build from source
 
-1. Clone the repository to a catkin workspace
-2. Build it with
-   ```
-   catkin build eigen_ptsc
-   ```
+  ```
+  git clone https://github.com/ivatavuk/lin_mpc_eigen.git
+  cd lin_mpc_eigen
+  mkdir build
+  cmake ..
+  make
+  make install
+  ```
+
+## 🖥️ Using the library
+
+### Including the library in your project
+
+**lin_mpc_eigen** provides native `CMake` support which allows the library to be easily used in `CMake` projects.
+**lin_mpc_eigen** exports a CMake target called `LinMpcEigen::LinMpcEigen` which can be imported using the `find_package` CMake command and used by calling `target_link_libraries` as in the following example:
+```cmake
+project(myproject)
+find_package(LinMpcEigen REQUIRED)
+add_executable(example example.cpp)
+target_link_libraries(example LinMpcEigen::LinMpcEigen)
 
 ## 📝 License
 
