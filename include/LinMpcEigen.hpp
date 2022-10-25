@@ -1,7 +1,7 @@
 /*
   Ivo Vatavuk, 2021
 
-  Linear tracking MPC library using Eigen linear algebra library and BPMPD QP solver
+  Linear reference tracking MPC library using Eigen linear algebra library
 
   Structures:
     LinearSystem
@@ -49,9 +49,6 @@
           X - vector of N states
           U - vector of N inputs 
           (N - prediction horizon)
-
-  TODO: 
-    Add custom constraint support
 */
 #ifndef LINMPCEIGEN_H_
 #define LINMPCEIGEN_H_

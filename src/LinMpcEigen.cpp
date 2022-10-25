@@ -130,9 +130,9 @@ LinMpcEigen::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
   setupMpcDynamics();
 }
 //TODO add bounds here!
-LinMpcEigen::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
-                          const VecNd &Y_d, const VecNd &x0, double W_y, 
-                          const SparseMat &w_u, const SparseMat &w_x ) 
+LinMpcEigen::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon, 
+                      const VecNd &Y_d, const VecNd &x0, double W_y, 
+                      const SparseMat &w_u, const SparseMat &w_x ) 
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), 
   W_y_(W_y), w_u_(w_u), w_x_(w_x),
   W_u_(SparseMat(N_ * linear_system_.n_u, N_ * linear_system_.n_u)),
