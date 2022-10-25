@@ -53,8 +53,8 @@
   TODO: 
     Add custom constraint support
 */
-#ifndef EIGENLINEARMPC_H_
-#define EIGENLINEARMPC_H_
+#ifndef LINMPCEIGEN_H_
+#define LINMPCEIGEN_H_
 
 #include <iostream>
 #include <chrono>
@@ -70,7 +70,7 @@ typedef Eigen::SparseMatrix<double> SparseMat;
 
 //typedef Eigen::SparseMatrix<double> SparseMatNd; todo probat ubrzat koristenjem ovoga!
 
-namespace EigenLinearMpc {
+namespace LinMpcEigen {
 
 struct LinearSystem {
   LinearSystem( const SparseMat &A, const SparseMat &B, 
@@ -173,4 +173,4 @@ private:
   std::unique_ptr<OsqpEigenOpt> osqp_eigen_opt_;
 };
 }
-#endif //EIGENLINEARMPC_H_
+#endif //LINMPCEIGEN_H_

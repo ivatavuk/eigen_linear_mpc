@@ -1,4 +1,4 @@
-#include "EigenLinearMpc.hpp"
+#include "LinMpcEigen.hpp"
 
 void setSparseBlock(Eigen::SparseMatrix<double> &output_matrix, const Eigen::SparseMatrix<double> &input_block,
                     uint32_t i, uint32_t j) 
@@ -59,13 +59,13 @@ SparseMat cocatenateMatrices(SparseMat mat_upper, SparseMat mat_lower)
 }
 
 // -------------- LinearSystem -----------------
-EigenLinearMpc::LinearSystem::LinearSystem(const SparseMat &A, const SparseMat &B, const SparseMat &C, const SparseMat &D) 
+LinMpcEigen::LinearSystem::LinearSystem(const SparseMat &A, const SparseMat &B, const SparseMat &C, const SparseMat &D) 
   : A(A), B(B), C(C), D(D), n_x(A.cols()), n_u(B.cols()), n_y(C.rows())
 {
   checkMatrixDimensions();
 }
 
-void EigenLinearMpc::LinearSystem::checkMatrixDimensions() const 
+void LinMpcEigen::LinearSystem::checkMatrixDimensions() const 
 {
   std::ostringstream msg;
 
@@ -103,7 +103,7 @@ void EigenLinearMpc::LinearSystem::checkMatrixDimensions() const
 }
 
 // -------------- MPC -----------------
-EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
+LinMpcEigen::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
                           const VecNd &Y_d, const VecNd &x0, double Q, double R ) 
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), Q_(Q), R_(R),
   A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
@@ -115,7 +115,7 @@ EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
   setupMpcDynamics();
 }
 
-EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
+LinMpcEigen::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
                           const VecNd &Y_d, const VecNd &x0, double Q, double R,
                           const VecNd &u_lower_bound, const VecNd &u_upper_bound ) 
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), Q_(Q), R_(R),
@@ -130,7 +130,7 @@ EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
   setupMpcDynamics();
 }
 //TODO add bounds here!
-EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
+LinMpcEigen::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
                           const VecNd &Y_d, const VecNd &x0, double W_y, 
                           const SparseMat &w_u, const SparseMat &w_x ) 
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), 
@@ -147,7 +147,7 @@ EigenLinearMpc::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
   setWeightMatrices();
 }
 
-void EigenLinearMpc::MPC::checkMatrixDimensions() const 
+void LinMpcEigen::MPC::checkMatrixDimensions() const 
 {
   std::ostringstream msg;
 
@@ -166,7 +166,7 @@ void EigenLinearMpc::MPC::checkMatrixDimensions() const
   }
 }
 
-void EigenLinearMpc::MPC::checkBoundsDimensions() const 
+void LinMpcEigen::MPC::checkBoundsDimensions() const 
 {
   std::ostringstream msg;
 
@@ -198,7 +198,7 @@ void EigenLinearMpc::MPC::checkBoundsDimensions() const
   */
 }
 
-void EigenLinearMpc::MPC::setupMpcDynamics() 
+void LinMpcEigen::MPC::setupMpcDynamics() 
 {
   uint32_t n_x = linear_system_.n_x;
   uint32_t n_u = linear_system_.n_u;
@@ -218,12 +218,12 @@ void EigenLinearMpc::MPC::setupMpcDynamics()
   }
 }
 
-void EigenLinearMpc::MPC::setYd(const VecNd &Y_d_in) 
+void LinMpcEigen::MPC::setYd(const VecNd &Y_d_in) 
 {
   Y_d_ = Y_d_in;
 }
 
-void EigenLinearMpc::MPC::initializeSolver()
+void LinMpcEigen::MPC::initializeSolver()
 {
   if(mpc_type_ == MPC1)
     setupQpMPC1();
@@ -235,7 +235,7 @@ void EigenLinearMpc::MPC::initializeSolver()
   }
 }
 
-void EigenLinearMpc::MPC::updateSolver(const VecNd &Y_d_in, const VecNd &x0)
+void LinMpcEigen::MPC::updateSolver(const VecNd &Y_d_in, const VecNd &x0)
 {
   Y_d_ = Y_d_in;
   x0_ = x0;
@@ -245,12 +245,12 @@ void EigenLinearMpc::MPC::updateSolver(const VecNd &Y_d_in, const VecNd &x0)
     updateQpMPC2();
 }
 
-VecNd EigenLinearMpc::MPC::solve() const 
+VecNd LinMpcEigen::MPC::solve() const 
 {
   return osqp_eigen_opt_->solveProblem();
 } 
 
-void EigenLinearMpc::MPC::setupQpMPC1() 
+void LinMpcEigen::MPC::setupQpMPC1() 
 {
   uint32_t n_u = linear_system_.n_u;
   C_A_ = C_mpc_*A_mpc_;
@@ -270,7 +270,7 @@ void EigenLinearMpc::MPC::setupQpMPC1()
   osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
 }
 
-void EigenLinearMpc::MPC::updateQpMPC1() 
+void LinMpcEigen::MPC::updateQpMPC1() 
 {
   VecNd b_qp = Q_C_A_T_C_B_ * x0_ - Q_C_A_T_*Y_d_;
 
@@ -278,7 +278,7 @@ void EigenLinearMpc::MPC::updateQpMPC1()
   osqp_eigen_opt_->setGradientAndInit(b_qp);
 }
 
-void EigenLinearMpc::MPC::setupQpConstrainedMPC1() 
+void LinMpcEigen::MPC::setupQpConstrainedMPC1() 
 {
   uint32_t n_u = linear_system_.n_u;
   C_A_ = C_mpc_*A_mpc_;
@@ -300,7 +300,7 @@ void EigenLinearMpc::MPC::setupQpConstrainedMPC1()
   osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
 }
 
-void EigenLinearMpc::MPC::setupQpMPC2() 
+void LinMpcEigen::MPC::setupQpMPC2() 
 {
   uint32_t n_u = linear_system_.n_u;
   // save intermediate product matrices to reduce redundant computation
@@ -326,7 +326,7 @@ void EigenLinearMpc::MPC::setupQpMPC2()
   osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
 }
 
-void EigenLinearMpc::MPC::updateQpMPC2() 
+void LinMpcEigen::MPC::updateQpMPC2() 
 {
   VecNd b_qp = (	W_y_*(C_B_*x0_ - Y_d_).transpose()*C_A_ +
                   (W_x_B_*x0_).transpose()*(W_x_A_)
@@ -335,20 +335,20 @@ void EigenLinearMpc::MPC::updateQpMPC2()
   osqp_eigen_opt_->setGradientAndInit(b_qp);
 }
 
-VecNd EigenLinearMpc::MPC::calculateX(const VecNd &U_in) const 
+VecNd LinMpcEigen::MPC::calculateX(const VecNd &U_in) const 
 {
   VecNd X = A_mpc_ * U_in + B_mpc_ * x0_;
   return X;
 }
 
-VecNd EigenLinearMpc::MPC::calculateY(const VecNd &U_in) const 
+VecNd LinMpcEigen::MPC::calculateY(const VecNd &U_in) const 
 {
   VecNd X = calculateX(U_in);
   VecNd Y = C_mpc_ * X;
   return Y;
 }
 
-std::vector< std::vector<double> > EigenLinearMpc::MPC::extractU(const VecNd &U_in) const 
+std::vector< std::vector<double> > LinMpcEigen::MPC::extractU(const VecNd &U_in) const 
 {
   std::vector<std::vector<double>> return_vector_U;
   for(uint32_t i = 0; i < linear_system_.n_u; i++)
@@ -362,7 +362,7 @@ std::vector< std::vector<double> > EigenLinearMpc::MPC::extractU(const VecNd &U_
   return return_vector_U;
 }
 
-std::vector< std::vector<double> > EigenLinearMpc::MPC::extractX(const VecNd &U_in) const
+std::vector< std::vector<double> > LinMpcEigen::MPC::extractX(const VecNd &U_in) const
 {
   auto X = calculateX(U_in);
   std::vector<std::vector<double>> return_vector_X;
@@ -377,7 +377,7 @@ std::vector< std::vector<double> > EigenLinearMpc::MPC::extractX(const VecNd &U_
   return return_vector_X;
 } 
 
-void EigenLinearMpc::MPC::setWeightMatrices() 
+void LinMpcEigen::MPC::setWeightMatrices() 
 {
   checkWeightDimensions();
   for (uint32_t i = 0; i < N_; i++) 
@@ -387,7 +387,7 @@ void EigenLinearMpc::MPC::setWeightMatrices()
   }
 }
 
-void EigenLinearMpc::MPC::checkWeightDimensions() const
+void LinMpcEigen::MPC::checkWeightDimensions() const
 {
   std::ostringstream msg;
   if ((uint32_t)w_u_.rows() != w_u_.cols()) 

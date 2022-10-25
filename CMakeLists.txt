@@ -26,13 +26,13 @@ include_directories(include
 set(LIBRARY_TARGET_NAME LinMpcEigen)
 set(LIBRARY_VERSION 0.0)
 set(LIBRARY_HEADERS 
-  include/EigenLinearMpc.hpp 
+  include/LinMpcEigen.hpp 
   include/QpProblem.hpp
   include/OsqpEigenOptimization.hpp
 )
 
 add_library(${LIBRARY_TARGET_NAME}
-src/EigenLinearMpc.cpp
+src/LinMpcEigen.cpp
 src/OsqpEigenOptimization.cpp
 )
 target_link_libraries(${LIBRARY_TARGET_NAME}
@@ -69,7 +69,7 @@ add_custom_target(uninstall
 #-----------------tests-----------------
 add_executable(test_example
   src/test_example.cpp
-  src/EigenLinearMpc.cpp
+  src/LinMpcEigen.cpp
   src/OsqpEigenOptimization.cpp
 )
 
@@ -81,7 +81,7 @@ target_link_libraries(test_example
 
 add_executable(test_example_2
   src/test_example_2.cpp
-  src/EigenLinearMpc.cpp
+  src/LinMpcEigen.cpp
   src/OsqpEigenOptimization.cpp
 )
 

@@ -1,4 +1,4 @@
-#include "EigenLinearMpc.hpp"
+#include "LinMpcEigen.hpp"
 #include "matplotlibcpp.hpp"
 #include "QpProblem.hpp"
 #include "ChronoCall.hpp"
@@ -39,7 +39,7 @@ int main()
   
   Eigen::MatrixXd D = Eigen::MatrixXd::Zero(1, 1);
 
-  EigenLinearMpc::LinearSystem example_system(A.sparseView(), 
+  LinMpcEigen::LinearSystem example_system(A.sparseView(), 
                                               B.sparseView(), 
                                               C.sparseView(), 
                                               D.sparseView());
@@ -55,7 +55,7 @@ int main()
   VecNd u_upper_bound(1);
   u_upper_bound << 7;
 
-  EigenLinearMpc::MPC mpc(example_system, horizon, Y_d, x0, Q, R, u_lower_bound, u_upper_bound);
+  LinMpcEigen::MPC mpc(example_system, horizon, Y_d, x0, Q, R, u_lower_bound, u_upper_bound);
   VecNd U_sol;
   for(uint32_t i = 0; i < n_simulate_steps; i++)
   {
