@@ -119,35 +119,3 @@ This project depends on [`osqp`](https://github.com/ivatavuk/osqp) and [osqp-eig
 Materials in this repository are distributed under the following license:
 
 > All software is licensed under the BSD 3-Clause License.
-
-## TODO
-### High priority
-- [x] Switch to Osqp
-- [x] Write example
-- [x] Add plotting for example
-- [x] Add better constructor, enum type of mpc
-- [x] Add better constructor type 2
-- [x] Throw errors for all wrong dimensions
-    - [x] Y_d and x0
-    - [x] w_u, w_y
-- [ ] Add constraints
-- [ ] Write more complex example
-- [ ] Remove OsqpEigenOptimization and QpProblem files to different package - larics_qp_common or smth
-- [x] Sparse matrices!
-    - [ ] Sparse vectors?
-    - [ ] Add non sparse constructor for Linear System
-    - [ ] Checkout sparse matrix triplets
-    - [ ] Your sparse matrix class...
-- [ ] Write nice README
-    - [ ] Write equations
-    - [ ] Write dependencies
-    - [ ] Write usage directions
-    - [ ] Switch equations to pics
-- [x] Add license info
-- [ ] Search TODOs in code
-- [ ] Remove ROS - build with cmake
-
-### Medium priority
-- [ ] Allow continuous systems
-- [ ] Allow using both implicit and explicit dynamics constraints
-- [ ] Add D matrix
