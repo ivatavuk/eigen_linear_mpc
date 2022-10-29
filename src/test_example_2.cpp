@@ -74,7 +74,7 @@ int main()
   SparseMat w_u_sparse = w_u.sparseView();
   SparseMat w_x_sparse = w_x.sparseView();
 
-  LinMpcEigen::MPC mpc(example_system, horizon, Y_d, x0, W_y, w_u_sparse, w_x_sparse);
+  LinMpcEigen::MPC mpc(example_system, horizon, Y_d, x0, W_y, w_u_sparse, w_x_sparse, u_lower_bound, u_upper_bound);
   VecNd U_sol;
   for(uint32_t i = 0; i < n_simulate_steps; i++)
   {

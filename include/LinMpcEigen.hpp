@@ -98,6 +98,11 @@ public:
   MPC(const LinearSystem &linear_system, uint32_t horizon, 
       const VecNd &Y_d, const VecNd &x0, double W_y, 
       const SparseMat &w_u, const SparseMat &w_x); 
+
+  MPC(const LinearSystem &linear_system, uint32_t horizon, 
+      const VecNd &Y_d, const VecNd &x0, double W_y, 
+      const SparseMat &w_u, const SparseMat &w_x,
+      const VecNd &u_lower_bound, const VecNd &u_upper_bound);
   
   void setYd(const VecNd &Y_d_in); // set Y_d from an Eigen vector Nd
 
@@ -162,6 +167,7 @@ private:
   void setupQpMPC2();
   void updateQpMPC2();
   void setupQpConstrainedMPC1(); 
+  void setupQpConstrainedMPC2(); 
 
   void checkMatrixDimensions() const; 
   void checkBoundsDimensions() const; 

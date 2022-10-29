@@ -147,6 +147,26 @@ LinMpcEigen::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon,
   setWeightMatrices();
 }
 
+LinMpcEigen::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon, 
+                      const VecNd &Y_d, const VecNd &x0, double W_y, 
+                      const SparseMat &w_u, const SparseMat &w_x,
+                      const VecNd &u_lower_bound, const VecNd &u_upper_bound ) 
+: linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), 
+  W_y_(W_y), w_u_(w_u), w_x_(w_x),
+  W_u_(SparseMat(N_ * linear_system_.n_u, N_ * linear_system_.n_u)),
+  W_x_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_x)),
+  u_lower_bound_(u_lower_bound), u_upper_bound_(u_upper_bound),
+  A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
+  B_mpc_(SparseMat(N_ * linear_system_.n_x, linear_system_.n_x)),
+  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x))
+{
+  mpc_type_ = MPC2_BOUND_CONSTRAINED;
+  checkBoundsDimensions();
+  checkMatrixDimensions();
+  setupMpcDynamics();
+  setWeightMatrices();
+}
+
 void LinMpcEigen::MPC::checkMatrixDimensions() const 
 {
   std::ostringstream msg;
@@ -218,6 +238,10 @@ void LinMpcEigen::MPC::initializeSolver()
   if(mpc_type_ == MPC1_BOUND_CONSTRAINED)
   {
     setupQpConstrainedMPC1();
+  }
+  if(mpc_type_ == MPC2_BOUND_CONSTRAINED)
+  {
+    setupQpConstrainedMPC2();
   }
 }
 
@@ -309,6 +333,34 @@ void LinMpcEigen::MPC::setupQpMPC2()
   VecNd b_ieq = VecNd::Zero(0);
 
   qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
+  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
+}
+
+void LinMpcEigen::MPC::setupQpConstrainedMPC2() 
+{
+  uint32_t n_u = linear_system_.n_u;
+  // save intermediate product matrices to reduce redundant computation
+  C_A_ = C_mpc_*A_mpc_;
+  C_B_ = C_mpc_*B_mpc_;
+  W_x_B_ = W_x_*B_mpc_;
+  W_x_A_ = W_x_*A_mpc_;
+
+  SparseMat A_qp = 	W_y_*(C_A_).transpose()*(C_A_) 
+                    + W_u_.transpose()*W_u_ 
+                    + (W_x_A_).transpose()*(W_x_A_);
+
+  VecNd b_qp = ( W_y_*(C_B_*x0_ - Y_d_).transpose()*C_A_ +
+                 (W_x_B_*x0_).transpose()*(W_x_A_) 
+                 ).transpose();
+
+  SparseMat A_eq(0, N_ * n_u);
+  VecNd b_eq = VecNd::Zero(0);
+  SparseMat A_ieq(0, N_ * n_u);
+  VecNd b_ieq = VecNd::Zero(0);
+  
+  qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq, 
+                                                  u_lower_bound_.colwise().replicate(N_), 
+                                                  u_upper_bound_.colwise().replicate(N_));
   osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
 }
 
