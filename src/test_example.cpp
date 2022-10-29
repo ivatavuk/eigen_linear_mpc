@@ -5,8 +5,8 @@
 
 namespace plt = matplotlibcpp;  
 
-Eigen::VectorXd generate_ramp_vec(	uint32_t len, uint32_t lawnmower_period, 
-                                        double lawnmower_max, double lawnmower_min );
+Eigen::VectorXd generate_ramp_vec(  uint32_t len, uint32_t lawnmower_period, 
+                                    double lawnmower_max, double lawnmower_min );
 std::vector<double> eigen2stdVec(	Eigen::VectorXd eigen_vec );
 
 int main()
@@ -40,10 +40,10 @@ int main()
   
   Eigen::MatrixXd D = Eigen::MatrixXd::Zero(1, 1);
 
-  LinMpcEigen::LinearSystem example_system(A.sparseView(), 
-                                              B.sparseView(), 
-                                              C.sparseView(), 
-                                              D.sparseView());
+  LinMpcEigen::LinearSystem example_system( A.sparseView(), 
+                                            B.sparseView(), 
+                                            C.sparseView(), 
+                                            D.sparseView());
 
   
   Eigen::VectorXd x0(2);
@@ -93,8 +93,8 @@ int main()
   return 0;
 }
 
-Eigen::VectorXd generate_ramp_vec(	uint32_t len, uint32_t lawnmower_period, 
-                                        double lawnmower_max, double lawnmower_min )
+Eigen::VectorXd generate_ramp_vec(  uint32_t len, uint32_t lawnmower_period, 
+                                    double lawnmower_max, double lawnmower_min )
 {
   Eigen::VectorXd lawnmower_vec(len);
 
@@ -104,7 +104,7 @@ Eigen::VectorXd generate_ramp_vec(	uint32_t len, uint32_t lawnmower_period,
   return lawnmower_vec;
 }
 
-std::vector<double> eigen2stdVec(	Eigen::VectorXd eigen_vec )
+std::vector<double> eigen2stdVec( Eigen::VectorXd eigen_vec )
 {
   std::vector<double> ret_vec;
   for(uint32_t i = 0; i < eigen_vec.rows(); i++)

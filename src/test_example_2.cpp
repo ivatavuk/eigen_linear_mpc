@@ -3,14 +3,13 @@
 #include "QpProblem.hpp"
 #include "ChronoCall.hpp"
 
-namespace plt = matplotlibcpp;  
+namespace plt = matplotlibcpp;
 
-Eigen::VectorXd generate_ramp_vec(	uint32_t len, uint32_t ramp_half_period, double ramp_rate );
-std::vector<double> eigen2stdVec(	Eigen::VectorXd eigen_vec );
+Eigen::VectorXd generate_ramp_vec( uint32_t len, uint32_t ramp_half_period, double ramp_rate );
+std::vector<double> eigen2stdVec( Eigen::VectorXd eigen_vec );
 
 int main()
 {
-
   // define ramp reference
   static constexpr uint32_t n_simulate_steps = 30;
   static constexpr uint32_t horizon = 40;
@@ -40,10 +39,10 @@ int main()
   
   Eigen::MatrixXd D = Eigen::MatrixXd::Zero(1, 2);
 
-  LinMpcEigen::LinearSystem example_system(A.sparseView(), 
-                                              B.sparseView(), 
-                                              C.sparseView(), 
-                                              D.sparseView());
+  LinMpcEigen::LinearSystem example_system( A.sparseView(), 
+                                            B.sparseView(), 
+                                            C.sparseView(), 
+                                            D.sparseView());
 
   
   Eigen::VectorXd x0(4);
@@ -119,7 +118,7 @@ int main()
   return 0;
 }
 
-Eigen::VectorXd generate_ramp_vec(	uint32_t len, uint32_t ramp_half_period, double ramp_rate )
+Eigen::VectorXd generate_ramp_vec( uint32_t len, uint32_t ramp_half_period, double ramp_rate )
 {
   Eigen::VectorXd lawnmower_vec(len);
 
@@ -132,7 +131,7 @@ Eigen::VectorXd generate_ramp_vec(	uint32_t len, uint32_t ramp_half_period, doub
   return lawnmower_vec;
 }
 
-std::vector<double> eigen2stdVec(	Eigen::VectorXd eigen_vec )
+std::vector<double> eigen2stdVec( Eigen::VectorXd eigen_vec )
 {
   std::vector<double> ret_vec;
   for(uint32_t i = 0; i < eigen_vec.rows(); i++)

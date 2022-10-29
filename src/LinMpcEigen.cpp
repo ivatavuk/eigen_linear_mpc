@@ -1,7 +1,7 @@
 #include "LinMpcEigen.hpp"
 
-void setSparseBlock(Eigen::SparseMatrix<double> &output_matrix, const Eigen::SparseMatrix<double> &input_block,
-                    uint32_t i, uint32_t j) 
+void LinMpcEigen::setSparseBlock( Eigen::SparseMatrix<double> &output_matrix, const Eigen::SparseMatrix<double> &input_block,
+                                  uint32_t i, uint32_t j) 
 {
   if((input_block.rows() > output_matrix.rows() - i) || (input_block.cols() > output_matrix.cols() - j))
   {
@@ -21,7 +21,7 @@ void setSparseBlock(Eigen::SparseMatrix<double> &output_matrix, const Eigen::Spa
 }
 
 // returns input_mat^(power)
-MatNd matrixPow(const MatNd &input_mat, uint32_t power) 
+MatNd LinMpcEigen::matrixPow(const MatNd &input_mat, uint32_t power) 
 {
   MatNd output_mat = MatNd::Identity(input_mat.rows(), input_mat.cols());
 
@@ -31,7 +31,7 @@ MatNd matrixPow(const MatNd &input_mat, uint32_t power)
   return output_mat;
 }
 // returns input_mat^(power)
-SparseMat matrixPow(const SparseMat &input_mat, uint32_t power) 
+SparseMat LinMpcEigen::matrixPow(const SparseMat &input_mat, uint32_t power) 
 {
   SparseMat output_mat(input_mat.rows(), input_mat.cols());
   output_mat.setIdentity();
@@ -42,17 +42,17 @@ SparseMat matrixPow(const SparseMat &input_mat, uint32_t power)
   return output_mat;
 }
 
-SparseMat cocatenateMatrices(SparseMat mat_upper, SparseMat mat_lower)
+SparseMat LinMpcEigen::cocatenateMatrices(SparseMat mat_upper, SparseMat mat_lower)
 {
   SparseMat M(mat_upper.rows() + mat_lower.rows(), mat_lower.cols());
   M.reserve(mat_upper.nonZeros() + mat_lower.nonZeros());
   for(Eigen::Index i = 0; i < mat_upper.cols(); i++)
   {
-      M.startVec(i); // Important: Must be called once for each column before inserting!
-      for(SparseMat::InnerIterator itUpper(mat_upper, i); itUpper; ++itUpper)
-          M.insertBack(itUpper.row(), i) = itUpper.value();
-      for(SparseMat::InnerIterator itLower(mat_lower, i); itLower; ++itLower)
-          M.insertBack(itLower.row() + mat_upper.rows(), i) = itLower.value();
+    M.startVec(i);
+    for(SparseMat::InnerIterator itUpper(mat_upper, i); itUpper; ++itUpper)
+      M.insertBack(itUpper.row(), i) = itUpper.value();
+    for(SparseMat::InnerIterator itLower(mat_lower, i); itLower; ++itLower)
+      M.insertBack(itLower.row() + mat_upper.rows(), i) = itLower.value();
   }
   M.finalize();
   return M;
@@ -129,7 +129,7 @@ LinMpcEigen::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
   checkMatrixDimensions();
   setupMpcDynamics();
 }
-//TODO add bounds here!
+
 LinMpcEigen::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon, 
                       const VecNd &Y_d, const VecNd &x0, double W_y, 
                       const SparseMat &w_u, const SparseMat &w_x ) 
@@ -182,20 +182,6 @@ void LinMpcEigen::MPC::checkBoundsDimensions() const
         << ", needs to be = " << linear_system_.n_u << "\n";
     throw std::runtime_error(msg.str());
   }
-  /*
-  if ((int)x_lower_bound_.rows() != linear_system_.n_x) 
-  {
-    msg << "MPC: Vector 'x_lower_bound_' size error\n lower_bounds_.rows() = " << x_lower_bound_.rows() 
-        << ", needs to be = " << linear_system_.n_x << "\n";
-    throw std::runtime_error(msg.str());
-  }
-  if ((int)x_upper_bound_.rows() != linear_system_.n_x) 
-  {
-    msg << "MPC: Vector 'x_upper_bound_' size error\n lower_bounds_.rows() = " << x_upper_bound_.rows() 
-        << ", needs to be = " << linear_system_.n_x << "\n";
-    throw std::runtime_error(msg.str());
-  }
-  */
 }
 
 void LinMpcEigen::MPC::setupMpcDynamics() 

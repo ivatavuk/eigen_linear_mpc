@@ -43,7 +43,6 @@
         X = A_mpc * U + B_mpc * x0
       MPC output vector: 
         Y = C_mpc * X 
-        (TODO: add support for D_mpc*U)
       where:
           x0 - inital state
           X - vector of N states
@@ -65,9 +64,13 @@ typedef Eigen::VectorXd VecNd;
 typedef Eigen::MatrixXd MatNd;
 typedef Eigen::SparseMatrix<double> SparseMat;
 
-//typedef Eigen::SparseMatrix<double> SparseMatNd; todo probat ubrzat koristenjem ovoga!
-
 namespace LinMpcEigen {
+
+void setSparseBlock(  Eigen::SparseMatrix<double> &output_matrix, const Eigen::SparseMatrix<double> &input_block,
+                      uint32_t i, uint32_t j );
+MatNd matrixPow(const MatNd &input_mat, uint32_t power);
+SparseMat matrixPow(const SparseMat &input_mat, uint32_t power);
+SparseMat cocatenateMatrices(SparseMat mat_upper, SparseMat mat_lower);
 
 struct LinearSystem {
   LinearSystem( const SparseMat &A, const SparseMat &B, 
@@ -129,8 +132,7 @@ private:
 
   std::unique_ptr<SparseQpProblem> qp_problem_;
 
-
-  // matrices saved for faster QP problem update
+  // matrices stored in memory for faster QP problem update
   SparseMat C_A_; // C_mpc * A_mpc
   SparseMat C_B_; // C_mpc * B_mpc
   
@@ -157,10 +159,8 @@ private:
   // MPC1
   void setupQpMPC1(); 
   void updateQpMPC1();
-  // MPC2
   void setupQpMPC2();
   void updateQpMPC2();
-  // MPC1
   void setupQpConstrainedMPC1(); 
 
   void checkMatrixDimensions() const; 
