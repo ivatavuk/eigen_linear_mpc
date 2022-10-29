@@ -11,9 +11,9 @@ std::vector<double> eigen2stdVec(	Eigen::VectorXd eigen_vec );
 int main()
 {
 
-  // define lawnmower reference
-  uint32_t n_simulate_steps = 30;
-  uint32_t horizon = 40;
+  // define ramp reference
+  static constexpr uint32_t n_simulate_steps = 30;
+  static constexpr uint32_t horizon = 40;
   Eigen::VectorXd Y_d_full = generate_ramp_vec(horizon + n_simulate_steps, 20, 0.1);
 
   /**                   Define linear system
@@ -22,7 +22,7 @@ int main()
    * 
    * y = [px]^T
    */
-  double T = 0.1;
+  static constexpr double T = 0.1;
   Eigen::MatrixXd A(4, 4);
   A <<  1, 0, T, 0,
         0, 1, 0, T,
@@ -56,11 +56,11 @@ int main()
   VecNd u_upper_bound(2);
   u_upper_bound << 7, 2;
 
-  //LinMpcEigen::MPC mpc(example_system, horizon, Y_d, x0, Q, R, u_lower_bound, u_upper_bound);
-  double W_y = 8000;
-  double wBddx = 80;
-  double wAddx = 8;
-  double wAx = 10;
+  //MPC weights
+  static constexpr double W_y = 8000;
+  static constexpr double wBddx = 80;
+  static constexpr double wAddx = 8;
+  static constexpr double wAx = 10;
 
   MatNd w_u(2, 2); 
   w_u <<  wBddx,  0,

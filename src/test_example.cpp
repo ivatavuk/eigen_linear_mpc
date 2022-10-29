@@ -13,10 +13,11 @@ int main()
 {
 
   // define lawnmower reference
-  uint32_t n_simulate_steps = 30;
-  uint32_t horizon = 40;
-  double Q = 10000.0;
-  double R = 1.0;
+  static constexpr uint32_t n_simulate_steps = 30;
+  static constexpr uint32_t horizon = 40;
+  // MPC weights
+  static constexpr double Q = 10000.0;
+  static constexpr double R = 1.0;
   Eigen::VectorXd Y_d_full = generate_ramp_vec(horizon + n_simulate_steps, 20, 1.0, 0.0);
 
   /**                   Define linear system
@@ -25,7 +26,7 @@ int main()
    * 
    * y = [px]^T
    */
-  double T = 0.05;
+  static constexpr double T = 0.05;
   Eigen::MatrixXd A(2, 2);
   A <<  1, T,
         0, 1;
