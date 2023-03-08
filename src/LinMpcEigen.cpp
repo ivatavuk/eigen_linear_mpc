@@ -167,6 +167,29 @@ LinMpcEigen::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon,
   setWeightMatrices();
 }
 
+LinMpcEigen::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon, 
+                      const VecNd &Y_d, const VecNd &x0, double W_y, 
+                      const SparseMat &w_u, const SparseMat &w_x,
+                      const VecNd &u_lower_bound, const VecNd &u_upper_bound,
+                      const VecNd &x_lower_bound, const VecNd &x_upper_bound ) 
+: linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), 
+  W_y_(W_y), w_u_(w_u), w_x_(w_x),
+  W_u_(SparseMat(N_ * linear_system_.n_u, N_ * linear_system_.n_u)),
+  W_x_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_x)),
+  u_lower_bound_(u_lower_bound), u_upper_bound_(u_upper_bound),
+  x_lower_bound_(x_lower_bound), x_upper_bound_(x_upper_bound),
+  A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
+  B_mpc_(SparseMat(N_ * linear_system_.n_x, linear_system_.n_x)),
+  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x))
+{
+  mpc_type_ = MPC2_BOUND_CONSTRAINED_2;
+  checkBoundsDimensions();
+  checkStateBoundsDimensions();
+  checkMatrixDimensions();
+  setupMpcDynamics();
+  setWeightMatrices();
+}
+
 void LinMpcEigen::MPC::checkMatrixDimensions() const 
 {
   std::ostringstream msg;
@@ -200,6 +223,24 @@ void LinMpcEigen::MPC::checkBoundsDimensions() const
   {
     msg << "MPC: Vector 'u_upper_bound_' size error\n lower_bounds_.rows() = " << u_upper_bound_.rows() 
         << ", needs to be = " << linear_system_.n_u << "\n";
+    throw std::runtime_error(msg.str());
+  }
+}
+
+void LinMpcEigen::MPC::checkStateBoundsDimensions() const 
+{
+  std::ostringstream msg;
+
+  if ((uint32_t)x_lower_bound_.rows() != linear_system_.n_x) 
+  {
+    msg << "MPC: Vector 'x_lower_bounds_' size error\n lower_bounds_.rows() = " << x_lower_bound_.rows() 
+        << ", needs to be = " << linear_system_.n_x << "\n";
+    throw std::runtime_error(msg.str());
+  }
+  if ((uint32_t)x_upper_bound_.rows() != linear_system_.n_x) 
+  {
+    msg << "MPC: Vector 'x_upper_bound_' size error\n lower_bounds_.rows() = " << x_upper_bound_.rows() 
+        << ", needs to be = " << linear_system_.n_x << "\n";
     throw std::runtime_error(msg.str());
   }
 }
@@ -243,6 +284,10 @@ void LinMpcEigen::MPC::initializeSolver()
   {
     setupQpConstrainedMPC2();
   }
+  if(mpc_type_ == MPC2_BOUND_CONSTRAINED_2)
+  {
+    setupQpConstrainedMPC2_2();
+  }
 }
 
 void LinMpcEigen::MPC::updateSolver(const VecNd &Y_d_in, const VecNd &x0)
@@ -253,6 +298,8 @@ void LinMpcEigen::MPC::updateSolver(const VecNd &Y_d_in, const VecNd &x0)
     updateQpMPC1();
   if(mpc_type_ == MPC2 || mpc_type_ == MPC2_BOUND_CONSTRAINED)
     updateQpMPC2();
+  if(mpc_type_ == MPC2_BOUND_CONSTRAINED_2)
+    updateQpMPC2_2();
 }
 
 VecNd LinMpcEigen::MPC::solve() const 
@@ -364,6 +411,61 @@ void LinMpcEigen::MPC::setupQpConstrainedMPC2()
   osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
 }
 
+void LinMpcEigen::MPC::setupQpConstrainedMPC2_2() 
+{
+  uint32_t n_u = linear_system_.n_u;
+  // save intermediate product matrices to reduce redundant computation
+  C_A_ = C_mpc_*A_mpc_;
+  C_B_ = C_mpc_*B_mpc_;
+  W_x_B_ = W_x_*B_mpc_;
+  W_x_A_ = W_x_*A_mpc_;
+
+  SparseMat A_qp = 	W_y_*(C_A_).transpose()*(C_A_) 
+                    + W_u_.transpose()*W_u_ 
+                    + (W_x_A_).transpose()*(W_x_A_);
+
+  VecNd b_qp = ( W_y_*(C_B_*x0_ - Y_d_).transpose()*C_A_ +
+                 (W_x_B_*x0_).transpose()*(W_x_A_) 
+                 ).transpose();
+
+  uint32_t n_x = linear_system_.n_x;
+  SparseMat identity(n_x, n_x);
+
+  SparseMat A_ieq_full = cocatenateMatrices(A_mpc_, -A_mpc_);
+  VecNd b_ieq_full = VecNd::Zero(2 * N_ * n_x);
+
+  b_ieq_full << -x_upper_bound_.colwise().replicate(N_) + B_mpc_ * x0_,
+                x_lower_bound_.colwise().replicate(N_) - B_mpc_ * x0_;
+  
+  //Hack select only second entry of x!
+  uint32_t which_i_of_x = 1;
+  MatNd A_ieq_dense(2 * N_ * 1, N_ * n_u);
+  VecNd b_ieq(2 * N_ * 1);
+  uint32_t row_counter = 0;
+  for(auto i = which_i_of_x; i < 2 * N_ * n_x; i+=n_x)
+  {
+    A_ieq_dense.row(row_counter) = A_ieq_full.row(i);
+    b_ieq(row_counter) = b_ieq_full(i);
+    row_counter++; 
+  }
+  std::cout << "row_counter = " << row_counter << "\n";  
+  SparseMat A_ieq = A_ieq_dense.sparseView();
+
+  SparseMat A_eq(0, N_ * n_u);
+  VecNd b_eq = VecNd::Zero(0);
+  //SparseMat A_ieq(0, N_ * n_u);
+  //VecNd b_ieq = VecNd::Zero(0);
+  
+  /*
+  qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq, 
+                                                  u_lower_bound_.colwise().replicate(N_), 
+                                                  u_upper_bound_.colwise().replicate(N_));
+  */
+  qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
+  
+  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
+}
+
 void LinMpcEigen::MPC::updateQpMPC2() 
 {
   VecNd b_qp = (	W_y_*(C_B_*x0_ - Y_d_).transpose()*C_A_ +
@@ -372,6 +474,32 @@ void LinMpcEigen::MPC::updateQpMPC2()
   qp_problem_->b_qp = b_qp;
   osqp_eigen_opt_->setGradientAndInit(b_qp);
 }
+
+void LinMpcEigen::MPC::updateQpMPC2_2() 
+{
+  VecNd b_qp = (	W_y_*(C_B_*x0_ - Y_d_).transpose()*C_A_ +
+                  (W_x_B_*x0_).transpose()*(W_x_A_)
+                  ).transpose();
+  qp_problem_->b_qp = b_qp;
+  uint32_t n_x = linear_system_.n_x;
+  VecNd b_ieq_full = VecNd::Zero(2 * N_ * n_x);
+
+  b_ieq_full << -x_upper_bound_.colwise().replicate(N_) + B_mpc_ * x0_,
+                x_lower_bound_.colwise().replicate(N_) - B_mpc_ * x0_;
+  
+  //Hack select only second entry of x!
+  uint32_t which_i_of_x = 1;
+  VecNd b_ieq(2 * N_ * 1);
+  uint32_t row_counter = 0;
+  for(auto i = which_i_of_x; i < 2 * N_ * n_x; i+=n_x)
+  {
+    b_ieq(row_counter) = b_ieq_full(i);
+    row_counter++; 
+  }
+
+  osqp_eigen_opt_->setGradientIeqConstraintAndInit(b_qp, b_ieq);
+}
+
 
 VecNd LinMpcEigen::MPC::calculateX(const VecNd &U_in) const 
 {
@@ -413,6 +541,21 @@ std::vector< std::vector<double> > LinMpcEigen::MPC::extractX(const VecNd &U_in)
     return_vector_X[mod].push_back(X(i));
   }
   return return_vector_X;
+} 
+
+std::vector< std::vector<double> > LinMpcEigen::MPC::extractY(const VecNd &U_in) const
+{
+  auto Y = calculateY(U_in);
+  std::vector<std::vector<double>> return_vector_Y;
+  for(uint32_t i = 0; i < linear_system_.n_y; i++)
+    return_vector_Y.push_back( std::vector<double>() );
+
+  for(uint32_t i = 0; i < Y.rows(); i++)
+  {
+    uint32_t mod = i % linear_system_.n_y;
+    return_vector_Y[mod].push_back(Y(i));
+  }
+  return return_vector_Y;
 } 
 
 void LinMpcEigen::MPC::setWeightMatrices() 

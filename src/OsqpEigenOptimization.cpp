@@ -89,6 +89,20 @@ void OsqpEigenOpt::setGradientAndInit(VecNd &b_qp )
   solver_.initSolver();
 }
 
+void OsqpEigenOpt::setGradientIeqConstraintAndInit(VecNd &b_qp, VecNd &b_ieq) 
+{
+  b_qp_ = b_qp;
+  solver_.data()->setGradient(b_qp);
+  uint32_t bound_dim = lower_bound_.rows();
+  
+  upper_bound_.segment(bound_dim - b_ieq.rows(), b_ieq.rows()) = -b_ieq;
+  solver_.data()->setBounds(lower_bound_, upper_bound_);
+
+  solver_.data()->setLinearConstraintsMatrix(linearConstraintsMatrix_);
+  solver_.clearSolver();
+  solver_.initSolver();
+}
+
 VecNd OsqpEigenOpt::solveProblem()
 {
   solver_.solveProblem();

@@ -36,6 +36,7 @@ public:
                         bool verbosity );
 
   void setGradientAndInit(VecNd &b_qp); 
+  void setGradientIeqConstraintAndInit(VecNd &b_qp, VecNd &b_ieq); 
 
   VecNd solveProblem();
 

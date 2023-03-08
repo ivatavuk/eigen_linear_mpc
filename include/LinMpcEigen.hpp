@@ -103,6 +103,12 @@ public:
       const VecNd &Y_d, const VecNd &x0, double W_y, 
       const SparseMat &w_u, const SparseMat &w_x,
       const VecNd &u_lower_bound, const VecNd &u_upper_bound);
+
+  MPC(const LinearSystem &linear_system, uint32_t horizon, 
+      const VecNd &Y_d, const VecNd &x0, double W_y, 
+      const SparseMat &w_u, const SparseMat &w_x,
+      const VecNd &u_lower_bound, const VecNd &u_upper_bound,
+      const VecNd &x_lower_bound, const VecNd &x_upper_bound );
   
   void setYd(const VecNd &Y_d_in); // set Y_d from an Eigen vector Nd
 
@@ -113,6 +119,7 @@ public:
   VecNd calculateY(const VecNd &U_in) const;
   std::vector< std::vector<double> > extractU(const VecNd &U_in) const; 
   std::vector< std::vector<double> > extractX(const VecNd &U_in) const; 
+  std::vector< std::vector<double> > extractY(const VecNd &U_in) const; 
 
   VecNd solve() const;
 
@@ -152,7 +159,8 @@ private:
     MPC1 = 0,
     MPC2 = 1,
     MPC1_BOUND_CONSTRAINED = 2,
-    MPC2_BOUND_CONSTRAINED = 3
+    MPC2_BOUND_CONSTRAINED = 3,
+    MPC2_BOUND_CONSTRAINED_2 = 4
   };
 
   mpc_type mpc_type_;
@@ -166,12 +174,15 @@ private:
   void updateQpMPC1();
   void setupQpMPC2();
   void updateQpMPC2();
+  void updateQpMPC2_2();
   void setupQpConstrainedMPC1(); 
   void setupQpConstrainedMPC2(); 
+  void setupQpConstrainedMPC2_2(); 
 
   void checkMatrixDimensions() const; 
   void checkBoundsDimensions() const; 
   void checkWeightDimensions() const;
+  void checkStateBoundsDimensions() const; 
 
   std::unique_ptr<OsqpEigenOpt> osqp_eigen_opt_;
 };
