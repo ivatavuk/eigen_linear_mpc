@@ -12,18 +12,19 @@ OsqpEigenOpt::OsqpEigenOpt()
 }
 
 OsqpEigenOpt::OsqpEigenOpt( const SparseQpProblem &qp_problem, 
-                            bool verbosity ) 
+                            double time_limit, bool verbosity ) 
   : alpha_(1.0),
   n_(qp_problem.A_qp.rows()), 
   m_(qp_problem.upper_bound.rows() + qp_problem.A_eq.rows() + qp_problem.A_ieq.rows()),
   linearConstraintsMatrix_(m_, n_)
 {
-  initializeSolver(qp_problem, verbosity);
+  initializeSolver(qp_problem, time_limit, verbosity);
 }
 
 void OsqpEigenOpt::initializeSolver(const SparseQpProblem &qp_problem, 
-                                    bool verbosity ) 
+                                    double time_limit, bool verbosity ) 
 {
+  //Default solver settings
   solver_.settings()->setVerbosity(verbosity);
   solver_.settings()->setAlpha(1.0);
 
@@ -31,6 +32,7 @@ void OsqpEigenOpt::initializeSolver(const SparseQpProblem &qp_problem,
   solver_.settings()->setRelativeTolerance(1e-6);
   solver_.settings()->setWarmStart(true);
   solver_.settings()->setMaxIteration(10000);
+  solver_.settings()->setTimeLimit(time_limit);
 
   solver_.settings()->setAdaptiveRho(true);
   solver_.settings()->setAdaptiveRhoInterval(5);

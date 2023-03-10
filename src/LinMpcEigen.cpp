@@ -103,26 +103,30 @@ void LinMpcEigen::LinearSystem::checkMatrixDimensions() const
 }
 
 // -------------- MPC -----------------
-LinMpcEigen::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
-                          const VecNd &Y_d, const VecNd &x0, double Q, double R ) 
+LinMpcEigen::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon, 
+                      const VecNd &Y_d, const VecNd &x0, double Q, double R,
+                      double solver_time_limit) 
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), Q_(Q), R_(R),
   A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
   B_mpc_(SparseMat(N_ * linear_system_.n_x, linear_system_.n_x)),
-  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x))
+  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x)),
+  solver_time_limit_(solver_time_limit)
 {
   mpc_type_ = MPC1;
   checkMatrixDimensions();
   setupMpcDynamics();
 }
 
-LinMpcEigen::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon, 
-                          const VecNd &Y_d, const VecNd &x0, double Q, double R,
-                          const VecNd &u_lower_bound, const VecNd &u_upper_bound ) 
+LinMpcEigen::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon, 
+                      const VecNd &Y_d, const VecNd &x0, double Q, double R,
+                      const VecNd &u_lower_bound, const VecNd &u_upper_bound,
+                      double solver_time_limit) 
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), Q_(Q), R_(R),
   u_lower_bound_(u_lower_bound), u_upper_bound_(u_upper_bound),
   A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
   B_mpc_(SparseMat(N_ * linear_system_.n_x, linear_system_.n_x)),
-  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x))
+  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x)),
+  solver_time_limit_(solver_time_limit)
 {
   mpc_type_ = MPC1_BOUND_CONSTRAINED;
   checkBoundsDimensions();
@@ -132,14 +136,16 @@ LinMpcEigen::MPC::MPC( const LinearSystem &linear_system, uint32_t horizon,
 
 LinMpcEigen::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon, 
                       const VecNd &Y_d, const VecNd &x0, double W_y, 
-                      const SparseMat &w_u, const SparseMat &w_x ) 
+                      const SparseMat &w_u, const SparseMat &w_x,
+                      double solver_time_limit) 
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), 
   W_y_(W_y), w_u_(w_u), w_x_(w_x),
   W_u_(SparseMat(N_ * linear_system_.n_u, N_ * linear_system_.n_u)),
   W_x_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_x)),
   A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
   B_mpc_(SparseMat(N_ * linear_system_.n_x, linear_system_.n_x)),
-  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x))
+  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x)),
+  solver_time_limit_(solver_time_limit)
 {
   mpc_type_ = MPC2;
   checkMatrixDimensions();
@@ -150,7 +156,8 @@ LinMpcEigen::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon,
 LinMpcEigen::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon, 
                       const VecNd &Y_d, const VecNd &x0, double W_y, 
                       const SparseMat &w_u, const SparseMat &w_x,
-                      const VecNd &u_lower_bound, const VecNd &u_upper_bound ) 
+                      const VecNd &u_lower_bound, const VecNd &u_upper_bound,
+                      double solver_time_limit) 
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), 
   W_y_(W_y), w_u_(w_u), w_x_(w_x),
   W_u_(SparseMat(N_ * linear_system_.n_u, N_ * linear_system_.n_u)),
@@ -158,7 +165,8 @@ LinMpcEigen::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon,
   u_lower_bound_(u_lower_bound), u_upper_bound_(u_upper_bound),
   A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
   B_mpc_(SparseMat(N_ * linear_system_.n_x, linear_system_.n_x)),
-  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x))
+  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x)),
+  solver_time_limit_(solver_time_limit)
 {
   mpc_type_ = MPC2_BOUND_CONSTRAINED;
   checkBoundsDimensions();
@@ -171,7 +179,8 @@ LinMpcEigen::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon,
                       const VecNd &Y_d, const VecNd &x0, double W_y, 
                       const SparseMat &w_u, const SparseMat &w_x,
                       const VecNd &u_lower_bound, const VecNd &u_upper_bound,
-                      const VecNd &x_lower_bound, const VecNd &x_upper_bound ) 
+                      const VecNd &x_lower_bound, const VecNd &x_upper_bound,
+                      double solver_time_limit) 
 : linear_system_(linear_system), N_(horizon), Y_d_(Y_d), x0_(x0), 
   W_y_(W_y), w_u_(w_u), w_x_(w_x),
   W_u_(SparseMat(N_ * linear_system_.n_u, N_ * linear_system_.n_u)),
@@ -180,7 +189,8 @@ LinMpcEigen::MPC::MPC(const LinearSystem &linear_system, uint32_t horizon,
   x_lower_bound_(x_lower_bound), x_upper_bound_(x_upper_bound),
   A_mpc_(SparseMat(N_ * linear_system_.n_x, N_ * linear_system_.n_u)),
   B_mpc_(SparseMat(N_ * linear_system_.n_x, linear_system_.n_x)),
-  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x))
+  C_mpc_(SparseMat(N_ * linear_system_.n_y, N_ * linear_system_.n_x)),
+  solver_time_limit_(solver_time_limit)
 {
   mpc_type_ = MPC2_BOUND_CONSTRAINED_2;
   checkBoundsDimensions();
@@ -324,7 +334,7 @@ void LinMpcEigen::MPC::setupQpMPC1()
   VecNd b_ieq = VecNd::Zero(0);
 
   qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
-  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
+  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_, solver_time_limit_);
 }
 
 void LinMpcEigen::MPC::updateQpMPC1() 
@@ -354,7 +364,7 @@ void LinMpcEigen::MPC::setupQpConstrainedMPC1()
   qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq, 
                                                   u_lower_bound_.colwise().replicate(N_), 
                                                   u_upper_bound_.colwise().replicate(N_));
-  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
+  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_, solver_time_limit_);
 }
 
 void LinMpcEigen::MPC::setupQpMPC2() 
@@ -380,7 +390,7 @@ void LinMpcEigen::MPC::setupQpMPC2()
   VecNd b_ieq = VecNd::Zero(0);
 
   qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
-  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
+  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_, solver_time_limit_);
 }
 
 void LinMpcEigen::MPC::setupQpConstrainedMPC2() 
@@ -408,7 +418,7 @@ void LinMpcEigen::MPC::setupQpConstrainedMPC2()
   qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq, 
                                                   u_lower_bound_.colwise().replicate(N_), 
                                                   u_upper_bound_.colwise().replicate(N_));
-  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
+  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_, solver_time_limit_);
 }
 
 void LinMpcEigen::MPC::setupQpConstrainedMPC2_2() 
@@ -463,7 +473,7 @@ void LinMpcEigen::MPC::setupQpConstrainedMPC2_2()
   */
   qp_problem_ = std::make_unique<SparseQpProblem>(A_qp, b_qp, A_eq, b_eq, A_ieq, b_ieq);
   
-  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_);
+  osqp_eigen_opt_ = std::make_unique<OsqpEigenOpt>(*qp_problem_, solver_time_limit_);
 }
 
 void LinMpcEigen::MPC::updateQpMPC2() 

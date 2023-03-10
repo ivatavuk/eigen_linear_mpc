@@ -88,27 +88,32 @@ struct LinearSystem {
 
 class MPC {
 public:
-  MPC(const LinearSystem &linear_system, uint32_t horizon, 
-      const VecNd &Y_d, const VecNd &x0, double Q, double R); 
+  MPC(const LinearSystem &linear_system, uint32_t horizon,
+      const VecNd &Y_d, const VecNd &x0, double Q, double R,
+      double solver_time_limit = 0.0); 
   
   MPC(const LinearSystem &linear_system, uint32_t horizon, 
       const VecNd &Y_d, const VecNd &x0, double Q, double R,
-      const VecNd &u_lower_bound, const VecNd &u_upper_bound);
-
-  MPC(const LinearSystem &linear_system, uint32_t horizon, 
-      const VecNd &Y_d, const VecNd &x0, double W_y, 
-      const SparseMat &w_u, const SparseMat &w_x); 
+      const VecNd &u_lower_bound, const VecNd &u_upper_bound,
+      double solver_time_limit = 0.0);
 
   MPC(const LinearSystem &linear_system, uint32_t horizon, 
       const VecNd &Y_d, const VecNd &x0, double W_y, 
       const SparseMat &w_u, const SparseMat &w_x,
-      const VecNd &u_lower_bound, const VecNd &u_upper_bound);
+      double solver_time_limit = 0.0); 
 
   MPC(const LinearSystem &linear_system, uint32_t horizon, 
       const VecNd &Y_d, const VecNd &x0, double W_y, 
       const SparseMat &w_u, const SparseMat &w_x,
       const VecNd &u_lower_bound, const VecNd &u_upper_bound,
-      const VecNd &x_lower_bound, const VecNd &x_upper_bound );
+      double solver_time_limit = 0.0);
+
+  MPC(const LinearSystem &linear_system, uint32_t horizon, 
+      const VecNd &Y_d, const VecNd &x0, double W_y, 
+      const SparseMat &w_u, const SparseMat &w_x,
+      const VecNd &u_lower_bound, const VecNd &u_upper_bound,
+      const VecNd &x_lower_bound, const VecNd &x_upper_bound,
+      double solver_time_limit = 0.0 );
   
   void setYd(const VecNd &Y_d_in); // set Y_d from an Eigen vector Nd
 
@@ -185,6 +190,8 @@ private:
   void checkStateBoundsDimensions() const; 
 
   std::unique_ptr<OsqpEigenOpt> osqp_eigen_opt_;
+
+  double solver_time_limit_ = 0;
 };
 }
 #endif //LINMPCEIGEN_H_

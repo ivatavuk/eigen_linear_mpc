@@ -30,10 +30,10 @@ class OsqpEigenOpt
 public:
   OsqpEigenOpt( );
   OsqpEigenOpt(	const SparseQpProblem &sparse_qp_problem, 
-                bool verbosity = false );
+                double time_limit = 0.0, bool verbosity = false );
 
   void initializeSolver(const SparseQpProblem &sparse_qp_problem, 
-                        bool verbosity );
+                        double time_limit, bool verbosity );
 
   void setGradientAndInit(VecNd &b_qp); 
   void setGradientIeqConstraintAndInit(VecNd &b_qp, VecNd &b_ieq); 
