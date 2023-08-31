@@ -1,10 +1,10 @@
 /**
- * @file EigenPTSC.hpp
+ * @file OsqpEigenOptimization.hpp
  * @author Ivo Vatavuk
  * @copyright Released under the terms of the BSD 3-Clause License
  * @date 2022
  * 
- *    Simple wrapper for OsqpEigen QP solver 
+ *    A simple wrapper for OsqpEigen QP solver 
  *    The QP problem is of the following form:
  *
  *      min 	1 / 2 * x^T * A_qp * x + b_qp^T * x
