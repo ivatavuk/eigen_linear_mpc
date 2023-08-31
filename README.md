@@ -2,43 +2,11 @@
 
 Linear reference tracking MPC library using Eigen linear algebra library, OSQP quadratic programming solver and the OsqpEigen wrapper for OSQP.
 
-## 🖥️ Using the library
+This is a work in progress.
 
-Library is easy to use, using Eigen matrices and vectors to describe the MPC problem:
+The library supports two versions of the reference tracking linear MPC:
 
-```cpp
-//Define a discrete linear system 
-// A, B, C, and D are of type Eigen::MatrixXd
-EigenLinearMpc::LinearSystem example_system(A, B, C, D); 
-// Create mpc object
-EigenLinearMpc::MPC mpc(example_system, // Discrete linear system (EigenLinearMpc::LinearSystem)
-                        horizon,        // MPC horizon (uint32_t)
-                        Y_d,            // System output reference (Eigen::VectorXd)
-                        x0,             // Initial system state (Eigen::VectorXd)
-                        Q,              // Q weight value (double)
-                        R);             // R weight value (double)
-
-mpc.initializeSolver();
-// Solve problem
-auto U_sol = mpc.solve();
-```
-
-
-Discrete linear system:
-
-$$
-\boldsymbol{x}(k+1) = \boldsymbol{A}\boldsymbol{x}(k) + \boldsymbol{B}\boldsymbol{u}(k)
-$$
-
-$$
-\boldsymbol{y}(k) = \boldsymbol{C}\boldsymbol{x}(k)
-$$
-
-  
-
-MPC 1:
-
-  
+#### MPC 1:
 
 $$\begin{equation}
 \begin{aligned}
@@ -56,7 +24,7 @@ Q||\boldsymbol{Y} - \boldsymbol{Y}_d||^2 + R||\boldsymbol{U}||^2\\
 \end{aligned}
 \end{equation}$$
 
-MPC 2:
+#### MPC 2:
 
 $$\begin{equation}
 \begin{aligned}
@@ -93,13 +61,30 @@ $$\begin{equation}
 \end{bmatrix}
 \end{equation}$$
 
-System output vector $\boldsymbol{Y}$ is calculated from $\boldsymbol{U}$ via the dynamics equations over the entire horizon:
+## 🖥️ Using the library
 
-$$\boldsymbol{X} = \boldsymbol{A}_{MPC} \ \boldsymbol{U} + \boldsymbol{B} _{MPC} \ \boldsymbol{x}_0$$
+Eigen matrices and vectors are used to describe the MPC problem:
 
-$$
-\boldsymbol{Y} = \boldsymbol{C}_{MPC} \ \boldsymbol{X}
-$$
+```cpp
+//Define a discrete linear system 
+// A, B, C, and D are of type Eigen::MatrixXd
+EigenLinearMpc::LinearSystem example_system(A, B, C, D); 
+// Construct a MPC object
+EigenLinearMpc::MPC mpc(example_system, // Discrete linear system (EigenLinearMpc::LinearSystem)
+                        horizon,        // MPC horizon (uint32_t)
+                        Y_d,            // System output reference (Eigen::VectorXd)
+                        x0,             // Initial system state (Eigen::VectorXd)
+                        Q,              // Q weight value (double)
+                        R);             // R weight value (double)
+
+mpc.initializeSolver();
+// Solve problem
+auto U_sol = mpc.solve();
+```
+
+The type of the reference tracking problem (`MPC 1` or `MPC 2`) is determined by MPC the object constructor.
+
+For complete examples of the two versions of the MPC problem see `test_example` and `test_example_2`.
 
 ## 📄 Dependences
 
@@ -117,8 +102,6 @@ This project depends on [`osqp`](https://github.com/osqp/osqp) and [osqp-eigen](
   make
   make install
   ```
-
-## 🖥️ Using the library
 
 ### Including the library in your project
 
