@@ -11,8 +11,8 @@ std::vector<double> eigen2stdVec( Eigen::VectorXd eigen_vec );
 int main()
 {
   // define ramp reference
-  static constexpr uint32_t n_simulate_steps = 10;
-  static constexpr uint32_t horizon = 120;
+  static constexpr uint32_t n_simulate_steps = 1;
+  static constexpr uint32_t horizon = 300;
   Eigen::VectorXd Y_d_full = generate_ramp_vec(horizon + n_simulate_steps, 20, 0.1);
 
   /**                   Define linear system
@@ -51,14 +51,14 @@ int main()
   VecNd Y_d = Y_d_full.segment(0, horizon);
 
   VecNd u_lower_bound(2);
-  u_lower_bound << -0.5, -0.5;
+  u_lower_bound << -0.3, -1.5;
   VecNd u_upper_bound(2);
-  u_upper_bound << 0.5, 0.5;
+  u_upper_bound << 0.3, 1.5;
 
   //MPC weights
   static constexpr double W_y = 8000;
-  static constexpr double wBddx = 80;
-  static constexpr double wAddx = 8;
+  static constexpr double wBddx = 10;
+  static constexpr double wAddx = 0;
   static constexpr double wAx = 10;
 
   MatNd w_u(2, 2); 
