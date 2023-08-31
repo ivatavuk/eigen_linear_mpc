@@ -1,4 +1,4 @@
-# Linear reference tracking MPC library using Eigen and OSQP QP solver
+# Linear reference tracking MPC library using Eigen and OSQP
 
 Linear reference tracking MPC library using Eigen linear algebra library, OSQP quadratic programming solver and the OsqpEigen wrapper for OSQP.
 
