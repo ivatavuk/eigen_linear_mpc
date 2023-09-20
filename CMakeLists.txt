@@ -78,7 +78,6 @@ target_link_libraries(test_example
   ${PYTHON_LIBRARIES}
 )
 
-
 add_executable(test_example_2
   src/test_example_2.cpp
   src/LinMpcEigen.cpp
@@ -86,6 +85,17 @@ add_executable(test_example_2
 )
 
 target_link_libraries(test_example_2 
+  PRIVATE ${LIBRARY_TARGET_NAME}
+  ${PYTHON_LIBRARIES}
+)
+
+add_executable(test_example_3
+  src/test_example_3.cpp
+  src/LinMpcEigen.cpp
+  src/OsqpEigenOptimization.cpp
+)
+
+target_link_libraries(test_example_3 
   PRIVATE ${LIBRARY_TARGET_NAME}
   ${PYTHON_LIBRARIES}
 )
